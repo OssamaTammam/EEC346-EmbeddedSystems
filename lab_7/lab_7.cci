@@ -1,0 +1,4 @@
+VERSION:3 SOURCE_TIMESTAMP:58906AC6
+NODE:I LEVEL:0 LINE:24 "D:\Uni\Programs\cvavr\inc\mega32a.h"
+NODE:F LEVEL:0 LINE:29 "timer0_ovf_isr(void)"
+NODE:F LEVEL:0 LINE:38 "main(void)"
