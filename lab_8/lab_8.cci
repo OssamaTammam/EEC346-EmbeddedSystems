@@ -1,0 +1,6 @@
+VERSION:3 SOURCE_TIMESTAMP:58976A77
+NODE:I LEVEL:0 LINE:24 "D:\Uni\Programs\cvavr\inc\mega32a.h"
+NODE:V LEVEL:0 LINE:27 "counter -> R5"
+NODE:F LEVEL:0 LINE:29 "timer0_ovf_isr(void)"
+NODE:F LEVEL:0 LINE:50 "ana_comp_isr(void)"
+NODE:F LEVEL:0 LINE:59 "main(void)"

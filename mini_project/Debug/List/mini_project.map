@@ -1,0 +1,35 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+dial                                                                              0x0260       2
+combo                                                                             0x0262       6
+combo_state                                                                       0x0268       1
+prog_state                                                                        0x0269       1
+candidate                                                                         0x026A       6
+digit                                                                             0x0270       1
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+eeprom_locked                                                                     0x0000       1
+eeprom_dial                                                                       0x0001       2
+eeprom_combo                                                                      0x0003       6
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+locked                                                                            R5           1
+screensaver_timeout                                                               R6,R7        2
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+LED_segment                                                                       0x0004A     18
+LED_blink                                                                         0x0005C     24
+ext_int0_isr                                                                      0x00074    139
+ext_int1_isr                                                                      0x000FF      1
+ext_int2_isr                                                                      0x00100    104
+timer0_ovf_isr                                                                    0x00168     67
+timer1_ovf_isr                                                                    0x001AB      7
+main                                                                              0x001B2    200
+sleep_enable                                                                      0x0027A      4

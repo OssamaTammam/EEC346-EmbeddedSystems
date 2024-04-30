@@ -1,0 +1,1092 @@
+;/*******************************************************
+;This program was created by the
+;CodeWizardAVR V3.14 Advanced
+;Automatic Program Generator
+;© Copyright 1998-2014 Pavel Haiduc, HP InfoTech s.r.l.
+;http://www.hpinfotech.com
+;
+;Project : mini_project_finaaaal
+;Version :
+;Date    : 24-Apr-2024
+;Author  :
+;Company :
+;Comments:
+;
+;
+;Chip type               : ATmega32A
+;Program type            : Application
+;AVR Core Clock frequency: 11.059200 MHz
+;Memory model            : Small
+;External RAM size       : 0
+;Data Stack size         : 512
+;*******************************************************/
+;
+;#include <mega32a.h>
+;PCODE: $00000000 VOL: 0
+	#ifndef __SLEEP_DEFINED__
+;PCODE: $00000001 VOL: 0
+	#define __SLEEP_DEFINED__
+;PCODE: $00000002 VOL: 0
+	.EQU __se_bit=0x80
+;PCODE: $00000003 VOL: 0
+	.EQU __sm_mask=0x70
+;PCODE: $00000004 VOL: 0
+	.EQU __sm_powerdown=0x20
+;PCODE: $00000005 VOL: 0
+	.EQU __sm_powersave=0x30
+;PCODE: $00000006 VOL: 0
+	.EQU __sm_standby=0x60
+;PCODE: $00000007 VOL: 0
+	.EQU __sm_ext_standby=0x70
+;PCODE: $00000008 VOL: 0
+	.EQU __sm_adc_noise_red=0x10
+;PCODE: $00000009 VOL: 0
+	.SET power_ctrl_reg=mcucr
+;PCODE: $0000000A VOL: 0
+	#endif
+;PCODE: $0000000B VOL: 0
+;PCODE: $0000000C VOL: 0
+;#include <io.h>
+;#include <eeprom.h>
+;#include <sleep.h>
+;#include <interrupt.h>
+;	flags -> R17
+
+	.CSEG
+;PCODE: $0000000D VOL: 0
+;PCODE: $0000000E VOL: 0
+;PCODE: $0000000F VOL: 0
+;PCODE: $00000010 VOL: 0
+;PCODE: $00000011 VOL: 0
+	cli
+;PCODE: $00000012 VOL: 0
+;PCODE: $00000013 VOL: 0
+;PCODE: $00000014 VOL: 0
+;PCODE: $00000015 VOL: 0
+;PCODE: $00000016 VOL: 0
+;#include <delay.h>
+;
+;// Declare your global variables here
+;#define sbi(port, bit) (port) |= (1 << (bit))
+;#define cbi(port, bit) (port) &= ~(1 << (bit))
+;
+;#define bit_is_clear(sfr, bit) (!(sfr & (1 << bit)))
+;
+;
+;typedef union {
+;    struct {
+;        signed char tens;
+;        signed char units;
+;    };
+;    unsigned int value; // alias
+;} DIAL; // virtual dial position
+;
+;volatile DIAL dial; // virtual dial position
+;volatile DIAL combo[3]; // combination
+;
+;typedef enum {
+;    STATUS_UNLOCKED,
+;    STATUS_LOCKED
+;} STATUS;
+;
+;STATUS locked; // locked status:  0=unlocked, 1=locked
+;
+;typedef enum {
+;    COMBO_MATCH_0, // no numbers matched - nothing happening
+;    COMBO_MATCH_1, // 1st number matched
+;    COMBO_MATCH_2, // 2nd number matched
+;    COMBO_MATCH_3  // 3rd number matched
+;} COMBO_STATE;
+;
+;volatile COMBO_STATE combo_state; // combination state machine variable
+;
+;typedef enum {
+;	PROG_0, // not programming the combination
+;	PROG_1, // 1st number programmed, checking 2nd
+;	PROG_2  // 2nd number programmed, checking 3rd
+;} PROG_STATE;
+;
+;volatile PROG_STATE prog_state = PROG_0; // combination programming state machine variable
+;
+;#define SCREENSAVER_TIMEOUT_VALUE 10000 // display blank timeout value in 1/250 second increments (2,000 ~= 8 seconds)
+;unsigned int screensaver_timeout;
+;
+;// EEPROM memory map
+;
+;EEMEM unsigned char eeprom_do_not_use; // .bad luck - do not use the first location in EEPROM
+;EEMEM unsigned char eeprom_locked; // saved locked status:  0=unlocked, 1=locked
+;EEMEM DIAL eeprom_dial; // saved dial position
+;EEMEM DIAL eeprom_combo[3]; // programmed combination
+;
+;// lock functions
+;
+;#define lock() cbi(PORTD, PORTD6); locked = STATUS_LOCKED
+;#define unlock() sbi(PORTD, PORTD6); locked = STATUS_UNLOCKED
+;
+;// LED_segment() - decode outputs for seven-segment LED display
+;
+;typedef enum {
+;	SEGMENT_0,
+;	SEGMENT_1,
+;	SEGMENT_2,
+;	SEGMENT_3,
+;	SEGMENT_4,
+;	SEGMENT_5,
+;	SEGMENT_6,
+;	SEGMENT_7,
+;	SEGMENT_8,
+;	SEGMENT_9,
+;	SEGMENT_BLANK,
+;	SEGMENT_DASH
+;} SEGMENT;
+;
+;SEGMENT LED_segment(unsigned char value) {
+; 0000 0069 SEGMENT LED_segment(unsigned char value) {
+;PCODE: $00000017 VOL: 0
+;PCODE: $00000018 VOL: 0
+; 0000 006A 
+; 0000 006B 	const unsigned char LED_segment_lookup_table[] = {
+; 0000 006C 
+; 0000 006D 		0b0111111, // 0
+; 0000 006E 		0b0000110, // 1
+; 0000 006F 		0b1011011, // 2
+; 0000 0070 		0b1001111, // 3
+; 0000 0071 		0b1100110, // 4
+; 0000 0072 		0b1101101, // 5
+; 0000 0073 		0b1111101, // 6
+; 0000 0074 		0b0000111, // 7
+; 0000 0075 		0b1111111, // 8
+; 0000 0076 		0b1101111, // 9
+; 0000 0077 		0b0000000, // blank
+; 0000 0078 		0b1000000, // dash
+; 0000 0079 	};
+; 0000 007A 
+; 0000 007B 	return ~LED_segment_lookup_table[value];
+;PCODE: $00000019 VOL: 0
+;PCODE: $0000001A VOL: 0
+;PCODE: $0000001B VOL: 0
+;PCODE: $0000001C VOL: 0
+;PCODE: $0000001D VOL: 0
+;PCODE: $0000001E VOL: 0
+;	value -> Y+12
+;	LED_segment_lookup_table -> Y+0
+;PCODE: $0000001F VOL: 0
+;PCODE: $00000020 VOL: 0
+;PCODE: $00000021 VOL: 0
+;PCODE: $00000022 VOL: 0
+;PCODE: $00000023 VOL: 0
+;PCODE: $00000024 VOL: 0
+;PCODE: $00000025 VOL: 0
+;PCODE: $00000026 VOL: 0
+; 0000 007C }
+;PCODE: $00000027 VOL: 0
+;
+;// LED_blink() - blink LED display
+;
+;void LED_blink(unsigned char n) {
+; 0000 0080 void LED_blink(unsigned char n) {
+;PCODE: $00000028 VOL: 0
+;PCODE: $00000029 VOL: 0
+; 0000 0081 
+; 0000 0082 	while(n--) {
+;PCODE: $0000002A VOL: 0
+;	n -> Y+0
+;PCODE: $0000002B VOL: 0
+;PCODE: $0000002C VOL: 0
+;PCODE: $0000002D VOL: 0
+;PCODE: $0000002E VOL: 0
+;PCODE: $0000002F VOL: 0
+;PCODE: $00000030 VOL: 0
+; 0000 0083 
+; 0000 0084 		cli(); // disable interrupts (prevents display multiplexing)
+;PCODE: $00000031 VOL: 0
+	cli
+;PCODE: $00000032 VOL: 0
+; 0000 0085 		PORTA = 0b11111111; // all segments off
+;PCODE: $00000033 VOL: 0
+;PCODE: $00000034 VOL: 0
+; 0000 0086 		delay_ms(200); // ~1 second delay, with display off
+;PCODE: $00000035 VOL: 0
+;PCODE: $00000036 VOL: 0
+;PCODE: $00000037 VOL: 0
+; 0000 0087         GIFR |= (1 << INTF2); // Clear INT2 flag
+;PCODE: $00000038 VOL: 0
+;PCODE: $00000039 VOL: 0
+;PCODE: $0000003A VOL: 0
+; 0000 0088 		sei(); // re-enable interrupts
+;PCODE: $0000003B VOL: 0
+	sei
+;PCODE: $0000003C VOL: 0
+; 0000 0089 		delay_ms(200); // ~1 second delay, with display on
+;PCODE: $0000003D VOL: 0
+;PCODE: $0000003E VOL: 0
+;PCODE: $0000003F VOL: 0
+; 0000 008A 	}
+;PCODE: $00000040 VOL: 0
+;PCODE: $00000041 VOL: 0
+; 0000 008B }
+;PCODE: $00000042 VOL: 0
+;PCODE: $00000043 VOL: 0
+;PCODE: $00000044 VOL: 0
+;
+;
+;typedef enum {
+;	MOTION_RIGHT,
+;	MOTION_LEFT
+;} MOTION;
+;
+;
+;// External Interrupt 0 service routine
+;interrupt [EXT_INT0] void ext_int0_isr(void)
+; 0000 0096 {
+;PCODE: $00000045 VOL: 0
+;PCODE: $00000046 VOL: 0
+; 0000 0097 // Place your code here
+; 0000 0098 MOTION motion; // direction of detected motion
+; 0000 0099 
+; 0000 009A 	screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value - turns display on
+;PCODE: $00000047 VOL: 0
+;	motion -> R17
+;PCODE: $00000048 VOL: 0
+;PCODE: $00000049 VOL: 0
+; 0000 009B 
+; 0000 009C 	// check encoder phase B to determine direction of motion
+; 0000 009D 
+; 0000 009E 	if(bit_is_clear(PIND, PORTD3)) {
+;PCODE: $0000004A VOL: 0
+;PCODE: $0000004B VOL: 0
+;PCODE: $0000004C VOL: 0
+; 0000 009F 		motion = MOTION_RIGHT;
+;PCODE: $0000004D VOL: 0
+;PCODE: $0000004E VOL: 0
+; 0000 00A0 		dial.units++; // increment dial position
+;PCODE: $0000004F VOL: 1
+;PCODE: $00000050 VOL: 0
+;PCODE: $00000051 VOL: 0
+;PCODE: $00000052 VOL: 1
+;PCODE: $00000053 VOL: 0
+;PCODE: $00000054 VOL: 0
+; 0000 00A1 		if(dial.units > 9) {
+;PCODE: $00000055 VOL: 1
+;PCODE: $00000056 VOL: 0
+;PCODE: $00000057 VOL: 0
+;PCODE: $00000058 VOL: 0
+; 0000 00A2 			dial.units = 0; // reset units on overflow
+;PCODE: $00000059 VOL: 0
+;PCODE: $0000005A VOL: 1
+;PCODE: $0000005B VOL: 0
+; 0000 00A3 			dial.tens++; // increment tens digit
+;PCODE: $0000005C VOL: 1
+;PCODE: $0000005D VOL: 0
+;PCODE: $0000005E VOL: 1
+; 0000 00A4 			if(dial.tens > 9) dial.tens = 0; // reset on overflow
+;PCODE: $0000005F VOL: 1
+;PCODE: $00000060 VOL: 0
+;PCODE: $00000061 VOL: 0
+;PCODE: $00000062 VOL: 0
+;PCODE: $00000063 VOL: 1
+; 0000 00A5 		}
+;PCODE: $00000064 VOL: 0
+; 0000 00A6 	} else {
+;PCODE: $00000065 VOL: 0
+;PCODE: $00000066 VOL: 0
+;PCODE: $00000067 VOL: 0
+; 0000 00A7 		motion = MOTION_LEFT;
+;PCODE: $00000068 VOL: 0
+;PCODE: $00000069 VOL: 0
+; 0000 00A8 		dial.units--; // decrement dial position
+;PCODE: $0000006A VOL: 1
+;PCODE: $0000006B VOL: 0
+;PCODE: $0000006C VOL: 0
+;PCODE: $0000006D VOL: 1
+;PCODE: $0000006E VOL: 0
+;PCODE: $0000006F VOL: 0
+; 0000 00A9 		if(dial.units < 0) {
+;PCODE: $00000070 VOL: 1
+;PCODE: $00000071 VOL: 0
+;PCODE: $00000072 VOL: 0
+;PCODE: $00000073 VOL: 0
+; 0000 00AA 			dial.units = 9; // rollover on underflow
+;PCODE: $00000074 VOL: 0
+;PCODE: $00000075 VOL: 1
+;PCODE: $00000076 VOL: 0
+; 0000 00AB 			dial.tens--; // decrement tens digit
+;PCODE: $00000077 VOL: 1
+;PCODE: $00000078 VOL: 0
+;PCODE: $00000079 VOL: 1
+; 0000 00AC 			if(dial.tens < 0) dial.tens = 9; // rollover on underflow
+;PCODE: $0000007A VOL: 1
+;PCODE: $0000007B VOL: 0
+;PCODE: $0000007C VOL: 0
+;PCODE: $0000007D VOL: 0
+;PCODE: $0000007E VOL: 1
+; 0000 00AD 		}
+;PCODE: $0000007F VOL: 0
+; 0000 00AE 	}
+;PCODE: $00000080 VOL: 0
+;PCODE: $00000081 VOL: 0
+; 0000 00AF 
+; 0000 00B0 	// combination lock logic
+; 0000 00B1 
+; 0000 00B2 	switch(combo_state) {
+;PCODE: $00000082 VOL: 1
+;PCODE: $00000083 VOL: 0
+; 0000 00B3 
+; 0000 00B4 		case COMBO_MATCH_0:
+;PCODE: $00000084 VOL: 0
+;PCODE: $00000085 VOL: 0
+; 0000 00B5 			// detect retrograde motion
+; 0000 00B6 			if(motion == MOTION_LEFT) {
+;PCODE: $00000086 VOL: 0
+;PCODE: $00000087 VOL: 0
+;PCODE: $00000088 VOL: 0
+; 0000 00B7 				combo_state = COMBO_MATCH_0; // start over
+;PCODE: $00000089 VOL: 0
+;PCODE: $0000008A VOL: 1
+; 0000 00B8 			} else {
+;PCODE: $0000008B VOL: 0
+;PCODE: $0000008C VOL: 0
+; 0000 00B9 				// look for 1st number match
+; 0000 00BA 				if(dial.value == combo[0].value) {
+;PCODE: $0000008D VOL: 1
+;PCODE: $0000008E VOL: 1
+;PCODE: $0000008F VOL: 0
+;PCODE: $00000090 VOL: 0
+; 0000 00BB 					// matched first number of combination
+; 0000 00BC 					combo_state = COMBO_MATCH_1; // advance to next state
+;PCODE: $00000091 VOL: 0
+;PCODE: $00000092 VOL: 1
+; 0000 00BD 				}
+; 0000 00BE 			}
+;PCODE: $00000093 VOL: 0
+;PCODE: $00000094 VOL: 0
+; 0000 00BF 			break;
+;PCODE: $00000095 VOL: 0
+; 0000 00C0 
+; 0000 00C1 		case COMBO_MATCH_1:
+;PCODE: $00000096 VOL: 0
+;PCODE: $00000097 VOL: 0
+;PCODE: $00000098 VOL: 0
+; 0000 00C2 			// detect retrograde motion
+; 0000 00C3 			if(motion == MOTION_RIGHT) {
+;PCODE: $00000099 VOL: 0
+;PCODE: $0000009A VOL: 0
+; 0000 00C4 				combo_state = COMBO_MATCH_0; // start over
+;PCODE: $0000009B VOL: 0
+;PCODE: $0000009C VOL: 1
+; 0000 00C5 			} else {
+;PCODE: $0000009D VOL: 0
+;PCODE: $0000009E VOL: 0
+; 0000 00C6 				// look for 2nd number match
+; 0000 00C7 				if(dial.value == combo[1].value) {
+;PCODE: $0000009F VOL: 1
+;PCODE: $000000A0 VOL: 0
+;PCODE: $000000A1 VOL: 1
+;PCODE: $000000A2 VOL: 0
+;PCODE: $000000A3 VOL: 0
+; 0000 00C8 					// matched second number of combination
+; 0000 00C9 					combo_state = COMBO_MATCH_2; // advance to next state
+;PCODE: $000000A4 VOL: 0
+;PCODE: $000000A5 VOL: 1
+; 0000 00CA 				}
+; 0000 00CB 			}
+;PCODE: $000000A6 VOL: 0
+;PCODE: $000000A7 VOL: 0
+; 0000 00CC 			break;
+;PCODE: $000000A8 VOL: 0
+; 0000 00CD 
+; 0000 00CE 		case COMBO_MATCH_2:
+;PCODE: $000000A9 VOL: 0
+;PCODE: $000000AA VOL: 0
+;PCODE: $000000AB VOL: 0
+; 0000 00CF 			// detect retrograde motion
+; 0000 00D0 			if(motion == MOTION_LEFT) {
+;PCODE: $000000AC VOL: 0
+;PCODE: $000000AD VOL: 0
+;PCODE: $000000AE VOL: 0
+; 0000 00D1 				combo_state = COMBO_MATCH_0; // start over
+;PCODE: $000000AF VOL: 0
+;PCODE: $000000B0 VOL: 1
+; 0000 00D2 			} else {
+;PCODE: $000000B1 VOL: 0
+;PCODE: $000000B2 VOL: 0
+; 0000 00D3 				// look for 3rd number match
+; 0000 00D4 				if(dial.value == combo[2].value) {
+;PCODE: $000000B3 VOL: 1
+;PCODE: $000000B4 VOL: 0
+;PCODE: $000000B5 VOL: 1
+;PCODE: $000000B6 VOL: 0
+;PCODE: $000000B7 VOL: 0
+; 0000 00D5 					unlock(); // combination satisfied
+;PCODE: $000000B8 VOL: 0
+;PCODE: $000000B9 VOL: 0
+;PCODE: $000000BA VOL: 0
+; 0000 00D6 					eeprom_write_byte(&eeprom_locked, locked); // save unlocked status
+;PCODE: $000000BB VOL: 0
+;PCODE: $000000BC VOL: 0
+;PCODE: $000000BD VOL: 0
+; 0000 00D7                     LED_blink(5);
+;PCODE: $000000BE VOL: 0
+;PCODE: $000000BF VOL: 0
+; 0000 00D8 					combo_state = COMBO_MATCH_3; // advance to next state
+;PCODE: $000000C0 VOL: 0
+;PCODE: $000000C1 VOL: 1
+; 0000 00D9 				}
+; 0000 00DA 			}
+;PCODE: $000000C2 VOL: 0
+;PCODE: $000000C3 VOL: 0
+; 0000 00DB 			break;
+;PCODE: $000000C4 VOL: 0
+; 0000 00DC 
+; 0000 00DD 		case COMBO_MATCH_3:
+;PCODE: $000000C5 VOL: 0
+;PCODE: $000000C6 VOL: 0
+;PCODE: $000000C7 VOL: 0
+; 0000 00DE 			lock(); // any motion relocks
+;PCODE: $000000C8 VOL: 0
+;PCODE: $000000C9 VOL: 0
+;PCODE: $000000CA VOL: 0
+;PCODE: $000000CB VOL: 0
+; 0000 00DF 			eeprom_write_byte(&eeprom_locked, locked); // save locked status
+;PCODE: $000000CC VOL: 0
+;PCODE: $000000CD VOL: 0
+;PCODE: $000000CE VOL: 0
+; 0000 00E0 			combo_state = COMBO_MATCH_0; // start over
+;PCODE: $000000CF VOL: 0
+;PCODE: $000000D0 VOL: 1
+; 0000 00E1 			break;
+;PCODE: $000000D1 VOL: 0
+; 0000 00E2 
+; 0000 00E3 		default: // ??? unknown/unexpected state
+;PCODE: $000000D2 VOL: 0
+; 0000 00E4 			break;
+;PCODE: $000000D3 VOL: 0
+; 0000 00E5 	}
+;PCODE: $000000D4 VOL: 0
+; 0000 00E6 
+; 0000 00E7 }
+;PCODE: $000000D5 VOL: 0
+;PCODE: $000000D6 VOL: 0
+;PCODE: $000000D7 VOL: 0
+;PCODE: $000000D8 VOL: 0
+;
+;// External Interrupt 1 service routine
+;interrupt [EXT_INT1] void ext_int1_isr(void)
+; 0000 00EB {
+;PCODE: $000000D9 VOL: 0
+;PCODE: $000000DA VOL: 0
+; 0000 00EC // Place your code here
+; 0000 00ED 
+; 0000 00EE }
+;PCODE: $000000DB VOL: 0
+;PCODE: $000000DC VOL: 0
+;PCODE: $000000DD VOL: 0
+;
+;// External Interrupt 2 service routine
+;interrupt [EXT_INT2] void ext_int2_isr(void)
+; 0000 00F2 {
+;PCODE: $000000DE VOL: 0
+;PCODE: $000000DF VOL: 0
+; 0000 00F3 // Place your code here
+; 0000 00F4 static DIAL candidate[3]; // holder for candidate combination
+; 0000 00F5 
+; 0000 00F6 	// combination programming logic
+; 0000 00F7 
+; 0000 00F8 	switch(prog_state) {
+;PCODE: $000000E0 VOL: 1
+;PCODE: $000000E1 VOL: 0
+; 0000 00F9 
+; 0000 00FA 		case PROG_0: // begin combination programming sequence
+;PCODE: $000000E2 VOL: 0
+;PCODE: $000000E3 VOL: 0
+; 0000 00FB 			candidate[0].value = dial.value; // save current dial position
+;PCODE: $000000E4 VOL: 1
+;PCODE: $000000E5 VOL: 0
+; 0000 00FC 			LED_blink(1); // blink display once to acknowledge 1st number saved
+;PCODE: $000000E6 VOL: 0
+;PCODE: $000000E7 VOL: 0
+; 0000 00FD 			prog_state = PROG_1; // advance to next state
+;PCODE: $000000E8 VOL: 0
+;PCODE: $000000E9 VOL: 1
+; 0000 00FE 			break;
+;PCODE: $000000EA VOL: 0
+; 0000 00FF 
+; 0000 0100 		case PROG_1: // entering 2nd number
+;PCODE: $000000EB VOL: 0
+;PCODE: $000000EC VOL: 0
+;PCODE: $000000ED VOL: 0
+; 0000 0101 			// 2nd number must be different than 1st
+; 0000 0102 			if(dial.value != candidate[0].value) {
+;PCODE: $000000EE VOL: 0
+;PCODE: $000000EF VOL: 1
+;PCODE: $000000F0 VOL: 0
+;PCODE: $000000F1 VOL: 0
+; 0000 0103 				candidate[1].value = dial.value; // save current dial position
+;PCODE: $000000F2 VOL: 1
+;PCODE: $000000F3 VOL: 0
+;PCODE: $000000F4 VOL: 0
+; 0000 0104 				LED_blink(2); // blink display twice to acknowledge 2nd number saved
+;PCODE: $000000F5 VOL: 0
+;PCODE: $000000F6 VOL: 0
+; 0000 0105 				prog_state = PROG_2; // advance to next state
+;PCODE: $000000F7 VOL: 0
+;PCODE: $000000F8 VOL: 1
+; 0000 0106 			}
+; 0000 0107 			break;
+;PCODE: $000000F9 VOL: 0
+;PCODE: $000000FA VOL: 0
+; 0000 0108 
+; 0000 0109 		case PROG_2:
+;PCODE: $000000FB VOL: 0
+;PCODE: $000000FC VOL: 0
+;PCODE: $000000FD VOL: 0
+; 0000 010A 			// 3rd number must be different than 2nd
+; 0000 010B 			if(dial.value != candidate[1].value) {
+;PCODE: $000000FE VOL: 0
+;PCODE: $000000FF VOL: 0
+;PCODE: $00000100 VOL: 1
+;PCODE: $00000101 VOL: 0
+;PCODE: $00000102 VOL: 0
+; 0000 010C 				candidate[2].value = dial.value; // save current dial position
+;PCODE: $00000103 VOL: 1
+;PCODE: $00000104 VOL: 0
+;PCODE: $00000105 VOL: 0
+; 0000 010D 				eeprom_write_word(&eeprom_combo[0].value, candidate[0].value); // save 1st number
+;PCODE: $00000106 VOL: 0
+;PCODE: $00000107 VOL: 0
+;PCODE: $00000108 VOL: 0
+; 0000 010E 				eeprom_write_word(&eeprom_combo[1].value, candidate[1].value); // save 2nd number
+;PCODE: $00000109 VOL: 0
+;PCODE: $0000010A VOL: 0
+;PCODE: $0000010B VOL: 0
+;PCODE: $0000010C VOL: 0
+;PCODE: $0000010D VOL: 0
+; 0000 010F 				eeprom_write_word(&eeprom_combo[2].value, candidate[2].value); // save 3rd number
+;PCODE: $0000010E VOL: 0
+;PCODE: $0000010F VOL: 0
+;PCODE: $00000110 VOL: 0
+;PCODE: $00000111 VOL: 0
+;PCODE: $00000112 VOL: 0
+; 0000 0110 				combo[0].value = candidate[0].value; // the new combination
+;PCODE: $00000113 VOL: 0
+;PCODE: $00000114 VOL: 1
+; 0000 0111 				combo[1].value = candidate[1].value; // the new combination
+;PCODE: $00000115 VOL: 0
+;PCODE: $00000116 VOL: 0
+;PCODE: $00000117 VOL: 1
+;PCODE: $00000118 VOL: 0
+; 0000 0112 				combo[2].value = candidate[2].value; // the new combination
+;PCODE: $00000119 VOL: 0
+;PCODE: $0000011A VOL: 0
+;PCODE: $0000011B VOL: 1
+;PCODE: $0000011C VOL: 0
+; 0000 0113 				LED_blink(3); // blink display three times to acknowledge 3rd number saved
+;PCODE: $0000011D VOL: 0
+;PCODE: $0000011E VOL: 0
+; 0000 0114 				prog_state = PROG_0; // start over
+;PCODE: $0000011F VOL: 0
+;PCODE: $00000120 VOL: 1
+; 0000 0115 			}
+; 0000 0116 			break;
+;PCODE: $00000121 VOL: 0
+;PCODE: $00000122 VOL: 0
+; 0000 0117 
+; 0000 0118 		default: // ??? unknown/unexpected state
+;PCODE: $00000123 VOL: 0
+; 0000 0119 			break;
+;PCODE: $00000124 VOL: 0
+; 0000 011A 	}
+;PCODE: $00000125 VOL: 0
+; 0000 011B 
+; 0000 011C     GIFR |= (1 << INTF2); // Clear INT2 flag
+;PCODE: $00000126 VOL: 0
+;PCODE: $00000127 VOL: 0
+;PCODE: $00000128 VOL: 0
+; 0000 011D 
+; 0000 011E }
+;PCODE: $00000129 VOL: 0
+;PCODE: $0000012A VOL: 0
+;PCODE: $0000012B VOL: 0
+;
+;typedef enum {
+;	DIGIT_LEFT,
+;	DIGIT_RIGHT
+;} DIGIT;
+;
+;
+;// Timer 0 overflow interrupt service routine
+;interrupt [TIM0_OVF] void timer0_ovf_isr(void)
+; 0000 0128 {
+;PCODE: $0000012C VOL: 0
+;PCODE: $0000012D VOL: 0
+; 0000 0129 // Reinitialize Timer 0 value
+; 0000 012A TCNT0=0x4F;
+;PCODE: $0000012E VOL: 0
+;PCODE: $0000012F VOL: 0
+; 0000 012B // Place your code here
+; 0000 012C static unsigned char digit = DIGIT_LEFT; // alternate between left & right digits
+; 0000 012D 
+; 0000 012E 	if(screensaver_timeout) {
+;PCODE: $00000130 VOL: 0
+;PCODE: $00000131 VOL: 0
+; 0000 012F 
+; 0000 0130 		cbi(PORTB, PORTB0); // turn off left digit (tens)
+;PCODE: $00000132 VOL: 0
+;PCODE: $00000133 VOL: 0
+; 0000 0131 		cbi(PORTB, PORTB1); // turn off right digit (units)
+;PCODE: $00000134 VOL: 0
+;PCODE: $00000135 VOL: 0
+; 0000 0132 
+; 0000 0133 		screensaver_timeout--; // decrement screensaver timeout value
+;PCODE: $00000136 VOL: 0
+;PCODE: $00000137 VOL: 0
+;PCODE: $00000138 VOL: 0
+; 0000 0134 		if(screensaver_timeout == 0) {
+;PCODE: $00000139 VOL: 0
+;PCODE: $0000013A VOL: 0
+; 0000 0135 			// shut down display function
+; 0000 0136 			eeprom_write_byte(&eeprom_locked, locked); // save locked/unlocked status
+;PCODE: $0000013B VOL: 0
+;PCODE: $0000013C VOL: 0
+;PCODE: $0000013D VOL: 0
+; 0000 0137 			eeprom_write_word(&eeprom_dial.value, dial.value); // save current dial position
+;PCODE: $0000013E VOL: 1
+;PCODE: $0000013F VOL: 0
+;PCODE: $00000140 VOL: 0
+; 0000 0138 			if(combo_state != COMBO_MATCH_3) combo_state = COMBO_MATCH_0; // reset any combination attempts
+;PCODE: $00000141 VOL: 1
+;PCODE: $00000142 VOL: 0
+;PCODE: $00000143 VOL: 0
+;PCODE: $00000144 VOL: 0
+;PCODE: $00000145 VOL: 1
+; 0000 0139 			prog_state = PROG_0; // cancel any pending combination programming attempts
+;PCODE: $00000146 VOL: 0
+;PCODE: $00000147 VOL: 0
+;PCODE: $00000148 VOL: 1
+; 0000 013A 
+; 0000 013B 			return; // early exit from interrupt handler, leaving display blank; nothing left to do
+;PCODE: $00000149 VOL: 0
+;PCODE: $0000014A VOL: 0
+; 0000 013C 		}
+; 0000 013D 
+; 0000 013E 		digit ^= 0x01; // toggle between left & right digits
+;PCODE: $0000014B VOL: 0
+;PCODE: $0000014C VOL: 0
+;PCODE: $0000014D VOL: 0
+;PCODE: $0000014E VOL: 0
+;PCODE: $0000014F VOL: 0
+; 0000 013F 
+; 0000 0140 		if(digit == DIGIT_LEFT) {
+;PCODE: $00000150 VOL: 0
+;PCODE: $00000151 VOL: 0
+;PCODE: $00000152 VOL: 0
+; 0000 0141 			// display left digit
+; 0000 0142 			PORTA = LED_segment(dial.tens);
+;PCODE: $00000153 VOL: 1
+;PCODE: $00000154 VOL: 0
+;PCODE: $00000155 VOL: 0
+; 0000 0143 			sbi(PORTB, PORTB0); // turn on left digit (tens)
+;PCODE: $00000156 VOL: 0
+;PCODE: $00000157 VOL: 0
+; 0000 0144 		} else {
+;PCODE: $00000158 VOL: 0
+;PCODE: $00000159 VOL: 0
+; 0000 0145 			// display right digit
+; 0000 0146 			PORTA = LED_segment(dial.units);
+;PCODE: $0000015A VOL: 1
+;PCODE: $0000015B VOL: 0
+;PCODE: $0000015C VOL: 0
+;PCODE: $0000015D VOL: 0
+; 0000 0147 			sbi(PORTB, PORTB1); // turn on right digit (units)
+;PCODE: $0000015E VOL: 0
+;PCODE: $0000015F VOL: 0
+; 0000 0148 		}
+;PCODE: $00000160 VOL: 0
+; 0000 0149 	}
+; 0000 014A }
+;PCODE: $00000161 VOL: 0
+;PCODE: $00000162 VOL: 0
+;PCODE: $00000163 VOL: 0
+;PCODE: $00000164 VOL: 0
+;
+;
+;// Timer1 overflow interrupt service routine
+;interrupt [TIM1_OVF] void timer1_ovf_isr(void)
+; 0000 014F {
+;PCODE: $00000165 VOL: 0
+;PCODE: $00000166 VOL: 0
+; 0000 0150 // Reinitialize Timer1 value
+; 0000 0151 TCNT1H=0x5333 >> 8;
+;PCODE: $00000167 VOL: 0
+;PCODE: $00000168 VOL: 0
+; 0000 0152 TCNT1L=0x5333 & 0xff;
+;PCODE: $00000169 VOL: 0
+;PCODE: $0000016A VOL: 0
+; 0000 0153 // Place your code here
+; 0000 0154 
+; 0000 0155 
+; 0000 0156 }
+;PCODE: $0000016B VOL: 0
+;PCODE: $0000016C VOL: 0
+;PCODE: $0000016D VOL: 0
+;
+;
+;void main(void)
+; 0000 015A {
+;PCODE: $0000016E VOL: 0
+; 0000 015B // Declare your local variables here
+; 0000 015C 
+; 0000 015D // Input/Output Ports initialization
+; 0000 015E // Port A initialization
+; 0000 015F // Function: Bit7=In Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
+; 0000 0160 DDRA=(0<<DDA7) | (1<<DDA6) | (1<<DDA5) | (1<<DDA4) | (1<<DDA3) | (1<<DDA2) | (1<<DDA1) | (1<<DDA0);
+;PCODE: $0000016F VOL: 0
+;PCODE: $00000170 VOL: 0
+; 0000 0161 // State: Bit7=T Bit6=1 Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
+; 0000 0162 PORTA=(0<<PORTA7) | (1<<PORTA6) | (1<<PORTA5) | (1<<PORTA4) | (1<<PORTA3) | (1<<PORTA2) | (1<<PORTA1) | (1<<PORTA0);
+;PCODE: $00000171 VOL: 0
+;PCODE: $00000172 VOL: 0
+; 0000 0163 
+; 0000 0164 // Port B initialization
+; 0000 0165 // Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=Out Bit0=Out
+; 0000 0166 DDRB=(0<<DDB7) | (0<<DDB6) | (0<<DDB5) | (0<<DDB4) | (0<<DDB3) | (0<<DDB2) | (1<<DDB1) | (1<<DDB0);
+;PCODE: $00000173 VOL: 0
+;PCODE: $00000174 VOL: 0
+; 0000 0167 // State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=P Bit1=0 Bit0=0
+; 0000 0168 PORTB=(0<<PORTB7) | (0<<PORTB6) | (0<<PORTB5) | (0<<PORTB4) | (0<<PORTB3) | (1<<PORTB2) | (0<<PORTB1) | (0<<PORTB0);
+;PCODE: $00000175 VOL: 0
+;PCODE: $00000176 VOL: 0
+; 0000 0169 
+; 0000 016A // Port C initialization
+; 0000 016B // Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
+; 0000 016C DDRC=(0<<DDC7) | (0<<DDC6) | (0<<DDC5) | (0<<DDC4) | (0<<DDC3) | (0<<DDC2) | (0<<DDC1) | (0<<DDC0);
+;PCODE: $00000177 VOL: 0
+;PCODE: $00000178 VOL: 0
+; 0000 016D // State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=T Bit1=T Bit0=T
+; 0000 016E PORTC=(0<<PORTC7) | (0<<PORTC6) | (0<<PORTC5) | (0<<PORTC4) | (0<<PORTC3) | (0<<PORTC2) | (0<<PORTC1) | (0<<PORTC0);
+;PCODE: $00000179 VOL: 0
+;PCODE: $0000017A VOL: 0
+; 0000 016F 
+; 0000 0170 // Port D initialization
+; 0000 0171 // Function: Bit7=In Bit6=Out Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
+; 0000 0172 DDRD=(0<<DDD7) | (1<<DDD6) | (0<<DDD5) | (0<<DDD4) | (0<<DDD3) | (0<<DDD2) | (0<<DDD1) | (0<<DDD0);
+;PCODE: $0000017B VOL: 0
+;PCODE: $0000017C VOL: 0
+; 0000 0173 // State: Bit7=T Bit6=1 Bit5=T Bit4=T Bit3=P Bit2=P Bit1=T Bit0=T
+; 0000 0174 PORTD=(0<<PORTD7) | (1<<PORTD6) | (0<<PORTD5) | (0<<PORTD4) | (1<<PORTD3) | (1<<PORTD2) | (0<<PORTD1) | (0<<PORTD0);
+;PCODE: $0000017D VOL: 0
+;PCODE: $0000017E VOL: 0
+; 0000 0175 
+; 0000 0176 
+; 0000 0177 // Timer/Counter 0 initialization
+; 0000 0178 // Clock source: System Clock
+; 0000 0179 // Clock value: 172.800 kHz
+; 0000 017A // Mode: Normal top=0xFF
+; 0000 017B // OC0 output: Disconnected
+; 0000 017C // Timer Period: 1.0243 ms
+; 0000 017D TCCR0=(0<<WGM00) | (0<<COM01) | (0<<COM00) | (0<<WGM01) | (0<<CS02) | (1<<CS01) | (1<<CS00);
+;PCODE: $0000017F VOL: 0
+;PCODE: $00000180 VOL: 0
+; 0000 017E TCNT0=0x4F;
+;PCODE: $00000181 VOL: 0
+;PCODE: $00000182 VOL: 0
+; 0000 017F OCR0=0x00;
+;PCODE: $00000183 VOL: 0
+;PCODE: $00000184 VOL: 0
+; 0000 0180 
+; 0000 0181 // Timer/Counter 1 initialization
+; 0000 0182 // Clock source: System Clock
+; 0000 0183 // Clock value: 10.800 kHz
+; 0000 0184 // Mode: Normal top=0xFFFF
+; 0000 0185 // OC1A output: Disconnected
+; 0000 0186 // OC1B output: Disconnected
+; 0000 0187 // Noise Canceler: Off
+; 0000 0188 // Input Capture on Falling Edge
+; 0000 0189 // Timer Period: 4.096 s
+; 0000 018A // Timer1 Overflow Interrupt: On
+; 0000 018B // Input Capture Interrupt: Off
+; 0000 018C // Compare A Match Interrupt: Off
+; 0000 018D // Compare B Match Interrupt: Off
+; 0000 018E TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
+;PCODE: $00000185 VOL: 0
+;PCODE: $00000186 VOL: 0
+; 0000 018F TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (0<<WGM12) | (1<<CS12) | (0<<CS11) | (1<<CS10);
+;PCODE: $00000187 VOL: 0
+;PCODE: $00000188 VOL: 0
+; 0000 0190 TCNT1H=0x53;
+;PCODE: $00000189 VOL: 0
+;PCODE: $0000018A VOL: 0
+; 0000 0191 TCNT1L=0x33;
+;PCODE: $0000018B VOL: 0
+;PCODE: $0000018C VOL: 0
+; 0000 0192 ICR1H=0x00;
+;PCODE: $0000018D VOL: 0
+;PCODE: $0000018E VOL: 0
+; 0000 0193 ICR1L=0x00;
+;PCODE: $0000018F VOL: 0
+;PCODE: $00000190 VOL: 0
+; 0000 0194 OCR1AH=0x00;
+;PCODE: $00000191 VOL: 0
+;PCODE: $00000192 VOL: 0
+; 0000 0195 OCR1AL=0x00;
+;PCODE: $00000193 VOL: 0
+;PCODE: $00000194 VOL: 0
+; 0000 0196 OCR1BH=0x00;
+;PCODE: $00000195 VOL: 0
+;PCODE: $00000196 VOL: 0
+; 0000 0197 OCR1BL=0x00;
+;PCODE: $00000197 VOL: 0
+;PCODE: $00000198 VOL: 0
+; 0000 0198 
+; 0000 0199 // Timer(s)/Counter(s) Interrupt(s) initialization
+; 0000 019A TIMSK=(0<<OCIE2) | (0<<TOIE2) | (0<<TICIE1) | (0<<OCIE1A) | (0<<OCIE1B) | (1<<TOIE1) | (0<<OCIE0) | (1<<TOIE0);
+;PCODE: $00000199 VOL: 0
+;PCODE: $0000019A VOL: 0
+; 0000 019B 
+; 0000 019C // External Interrupt(s) initialization
+; 0000 019D // INT0: On
+; 0000 019E // INT0 Mode: Falling Edge
+; 0000 019F // INT1: Off
+; 0000 01A0 // INT2: On
+; 0000 01A1 // INT2 Mode: Falling Edge
+; 0000 01A2 GICR|=(0<<INT1) | (1<<INT0) | (1<<INT2);
+;PCODE: $0000019B VOL: 0
+;PCODE: $0000019C VOL: 0
+;PCODE: $0000019D VOL: 0
+; 0000 01A3 MCUCR=(0<<ISC11) | (0<<ISC10) | (1<<ISC01) | (0<<ISC00);
+;PCODE: $0000019E VOL: 0
+;PCODE: $0000019F VOL: 0
+; 0000 01A4 MCUCSR=(0<<ISC2);
+;PCODE: $000001A0 VOL: 0
+;PCODE: $000001A1 VOL: 0
+; 0000 01A5 GIFR=(0<<INTF1) | (1<<INTF0) | (1<<INTF2);
+;PCODE: $000001A2 VOL: 0
+;PCODE: $000001A3 VOL: 0
+; 0000 01A6 
+; 0000 01A7 // Global enable interrupts
+; 0000 01A8 #asm("sei")
+;PCODE: $000001A4 VOL: 0
+	sei
+;PCODE: $000001A5 VOL: 0
+; 0000 01A9 
+; 0000 01AA 	locked = eeprom_read_byte(&eeprom_locked); // saved locked status
+;PCODE: $000001A6 VOL: 0
+;PCODE: $000001A7 VOL: 0
+;PCODE: $000001A8 VOL: 0
+; 0000 01AB 	if(locked == STATUS_UNLOCKED) {
+;PCODE: $000001A9 VOL: 0
+;PCODE: $000001AA VOL: 0
+; 0000 01AC 		unlock(); // unlocked
+;PCODE: $000001AB VOL: 0
+;PCODE: $000001AC VOL: 0
+;PCODE: $000001AD VOL: 0
+; 0000 01AD 	} else if(locked == STATUS_LOCKED) {
+;PCODE: $000001AE VOL: 0
+;PCODE: $000001AF VOL: 0
+;PCODE: $000001B0 VOL: 0
+;PCODE: $000001B1 VOL: 0
+;PCODE: $000001B2 VOL: 0
+; 0000 01AE 		lock(); // locked
+;PCODE: $000001B3 VOL: 0
+;PCODE: $000001B4 VOL: 0
+;PCODE: $000001B5 VOL: 0
+;PCODE: $000001B6 VOL: 0
+; 0000 01AF 	} else {
+;PCODE: $000001B7 VOL: 0
+;PCODE: $000001B8 VOL: 0
+; 0000 01B0 		lock(); // unknown/unexpected state:  default is locked
+;PCODE: $000001B9 VOL: 0
+;PCODE: $000001BA VOL: 0
+;PCODE: $000001BB VOL: 0
+;PCODE: $000001BC VOL: 0
+; 0000 01B1 	}
+;PCODE: $000001BD VOL: 0
+;PCODE: $000001BE VOL: 0
+; 0000 01B2 
+; 0000 01B3 	if(locked == STATUS_LOCKED) {
+;PCODE: $000001BF VOL: 0
+;PCODE: $000001C0 VOL: 0
+;PCODE: $000001C1 VOL: 0
+; 0000 01B4 		screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value
+;PCODE: $000001C2 VOL: 0
+;PCODE: $000001C3 VOL: 0
+; 0000 01B5 		combo_state = COMBO_MATCH_0; // nothing happening
+;PCODE: $000001C4 VOL: 0
+;PCODE: $000001C5 VOL: 1
+; 0000 01B6 	} else {
+;PCODE: $000001C6 VOL: 0
+;PCODE: $000001C7 VOL: 0
+; 0000 01B7 		screensaver_timeout = 0; // if unlocked, current dial position is 3rd number of combination:  DO NOT REVEAL
+;PCODE: $000001C8 VOL: 0
+; 0000 01B8 		combo_state = COMBO_MATCH_3; // unlocked, waiting for motion to relock
+;PCODE: $000001C9 VOL: 0
+;PCODE: $000001CA VOL: 1
+; 0000 01B9 	}
+;PCODE: $000001CB VOL: 0
+; 0000 01BA 
+; 0000 01BB 	dial.value = eeprom_read_word(&eeprom_dial.value); // saved dial position
+;PCODE: $000001CC VOL: 0
+;PCODE: $000001CD VOL: 0
+;PCODE: $000001CE VOL: 1
+; 0000 01BC 	if((dial.units >= 0) && (dial.units <= 9) && (dial.tens >= 0) && (dial.tens <= 9)) {
+;PCODE: $000001CF VOL: 1
+;PCODE: $000001D0 VOL: 0
+;PCODE: $000001D1 VOL: 0
+;PCODE: $000001D2 VOL: 0
+;PCODE: $000001D3 VOL: 1
+;PCODE: $000001D4 VOL: 0
+;PCODE: $000001D5 VOL: 0
+;PCODE: $000001D6 VOL: 0
+;PCODE: $000001D7 VOL: 1
+;PCODE: $000001D8 VOL: 0
+;PCODE: $000001D9 VOL: 0
+;PCODE: $000001DA VOL: 1
+;PCODE: $000001DB VOL: 0
+;PCODE: $000001DC VOL: 0
+;PCODE: $000001DD VOL: 0
+;PCODE: $000001DE VOL: 0
+;PCODE: $000001DF VOL: 0
+;PCODE: $000001E0 VOL: 0
+; 0000 01BD 		// saved dial position was valid; continue
+; 0000 01BE 	} else {
+;PCODE: $000001E1 VOL: 0
+;PCODE: $000001E2 VOL: 0
+; 0000 01BF 		dial.units = 0; // reset dial position
+;PCODE: $000001E3 VOL: 0
+;PCODE: $000001E4 VOL: 1
+;PCODE: $000001E5 VOL: 0
+; 0000 01C0 		dial.tens = 0;
+;PCODE: $000001E6 VOL: 0
+;PCODE: $000001E7 VOL: 1
+; 0000 01C1 	}
+;PCODE: $000001E8 VOL: 0
+; 0000 01C2 
+; 0000 01C3 	combo[0].value = eeprom_read_word(&eeprom_combo[0].value); // saved combination 1/3
+;PCODE: $000001E9 VOL: 0
+;PCODE: $000001EA VOL: 0
+;PCODE: $000001EB VOL: 1
+; 0000 01C4 	combo[1].value = eeprom_read_word(&eeprom_combo[1].value); // saved combination 2/3
+;PCODE: $000001EC VOL: 0
+;PCODE: $000001ED VOL: 0
+;PCODE: $000001EE VOL: 0
+;PCODE: $000001EF VOL: 1
+;PCODE: $000001F0 VOL: 0
+; 0000 01C5 	combo[2].value = eeprom_read_word(&eeprom_combo[2].value); // saved combination 3/3
+;PCODE: $000001F1 VOL: 0
+;PCODE: $000001F2 VOL: 0
+;PCODE: $000001F3 VOL: 0
+;PCODE: $000001F4 VOL: 1
+;PCODE: $000001F5 VOL: 0
+; 0000 01C6 
+; 0000 01C7 	if((combo[0].units >= 0) && (combo[0].units <= 9) && (combo[0].tens >= 0) && (combo[0].tens <= 9)
+; 0000 01C8 		&& (combo[1].units >= 0) && (combo[1].units <= 9) && (combo[1].tens >= 0) && (combo[1].tens <= 9)
+; 0000 01C9 		&& (combo[2].units >= 0) && (combo[2].units <= 9) && (combo[2].tens >= 0) && (combo[2].tens <= 9)) {
+;PCODE: $000001F6 VOL: 1
+;PCODE: $000001F7 VOL: 0
+;PCODE: $000001F8 VOL: 0
+;PCODE: $000001F9 VOL: 0
+;PCODE: $000001FA VOL: 1
+;PCODE: $000001FB VOL: 0
+;PCODE: $000001FC VOL: 0
+;PCODE: $000001FD VOL: 0
+;PCODE: $000001FE VOL: 1
+;PCODE: $000001FF VOL: 0
+;PCODE: $00000200 VOL: 0
+;PCODE: $00000201 VOL: 1
+;PCODE: $00000202 VOL: 0
+;PCODE: $00000203 VOL: 0
+;PCODE: $00000204 VOL: 1
+;PCODE: $00000205 VOL: 0
+;PCODE: $00000206 VOL: 0
+;PCODE: $00000207 VOL: 0
+;PCODE: $00000208 VOL: 1
+;PCODE: $00000209 VOL: 0
+;PCODE: $0000020A VOL: 0
+;PCODE: $0000020B VOL: 0
+;PCODE: $0000020C VOL: 1
+;PCODE: $0000020D VOL: 0
+;PCODE: $0000020E VOL: 0
+;PCODE: $0000020F VOL: 0
+;PCODE: $00000210 VOL: 1
+;PCODE: $00000211 VOL: 0
+;PCODE: $00000212 VOL: 0
+;PCODE: $00000213 VOL: 0
+;PCODE: $00000214 VOL: 1
+;PCODE: $00000215 VOL: 0
+;PCODE: $00000216 VOL: 0
+;PCODE: $00000217 VOL: 0
+;PCODE: $00000218 VOL: 1
+;PCODE: $00000219 VOL: 0
+;PCODE: $0000021A VOL: 0
+;PCODE: $0000021B VOL: 0
+;PCODE: $0000021C VOL: 1
+;PCODE: $0000021D VOL: 0
+;PCODE: $0000021E VOL: 0
+;PCODE: $0000021F VOL: 0
+;PCODE: $00000220 VOL: 1
+;PCODE: $00000221 VOL: 0
+;PCODE: $00000222 VOL: 0
+;PCODE: $00000223 VOL: 0
+;PCODE: $00000224 VOL: 0
+;PCODE: $00000225 VOL: 0
+;PCODE: $00000226 VOL: 0
+;PCODE: $00000227 VOL: 0
+; 0000 01CA 		// saved combination was valid; continue
+; 0000 01CB 	} else {
+;PCODE: $00000228 VOL: 0
+;PCODE: $00000229 VOL: 0
+; 0000 01CC 		combo[0].units = 3; // default combination 1/3
+;PCODE: $0000022A VOL: 0
+;PCODE: $0000022B VOL: 1
+;PCODE: $0000022C VOL: 0
+; 0000 01CD 		combo[0].tens = 0;
+;PCODE: $0000022D VOL: 0
+;PCODE: $0000022E VOL: 1
+; 0000 01CE 		combo[1].units = 1; // default combination 2/3
+;PCODE: $0000022F VOL: 0
+;PCODE: $00000230 VOL: 1
+;PCODE: $00000231 VOL: 0
+; 0000 01CF 		combo[1].tens = 0;
+;PCODE: $00000232 VOL: 0
+;PCODE: $00000233 VOL: 1
+;PCODE: $00000234 VOL: 0
+; 0000 01D0 		combo[2].units = 4; // default combination 3/3
+;PCODE: $00000235 VOL: 0
+;PCODE: $00000236 VOL: 1
+;PCODE: $00000237 VOL: 0
+; 0000 01D1 		combo[2].tens = 0;
+;PCODE: $00000238 VOL: 0
+;PCODE: $00000239 VOL: 1
+;PCODE: $0000023A VOL: 0
+; 0000 01D2 	}
+;PCODE: $0000023B VOL: 0
+; 0000 01D3 
+; 0000 01D4 
+; 0000 01D5 	sei(); // enable global interrupts
+;PCODE: $0000023C VOL: 0
+	sei
+;PCODE: $0000023D VOL: 0
+; 0000 01D6 
+; 0000 01D7 
+; 0000 01D8 
+; 0000 01D9 
+; 0000 01DA     sleep_enable();
+;PCODE: $0000023E VOL: 0
+; 0000 01DB 
+; 0000 01DC while (1)
+;PCODE: $0000023F VOL: 0
+; 0000 01DD       {
+; 0000 01DE       // Place your code here
+; 0000 01DF        sleep_enter();
+;PCODE: $00000240 VOL: 0
+	sleep
+;PCODE: $00000241 VOL: 0
+; 0000 01E0       // LED_blink(1);
+; 0000 01E1 
+; 0000 01E2       }
+;PCODE: $00000242 VOL: 0
+;PCODE: $00000243 VOL: 0
+; 0000 01E3 }
+;PCODE: $00000244 VOL: 0
+;PCODE: $00000245 VOL: 0
+;PCODE: $00000246 VOL: 0
