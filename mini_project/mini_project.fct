@@ -1,3 +1,3 @@
-main DSTACK_USAGE:0 DSTACK_LEVEL:0 FILE:"mini_project.c" LINE:345
-timer0_ovf_isr DSTACK_USAGE:12 DSTACK_LEVEL:12 FILE:"mini_project.c" LINE:295
+main DSTACK_USAGE:0 DSTACK_LEVEL:0 FILE:"mini_project.c" LINE:350
+timer0_ovf_isr DSTACK_USAGE:12 DSTACK_LEVEL:12 FILE:"mini_project.c" LINE:300
 LED_segment DSTACK_USAGE:13 DSTACK_LEVEL:25 FILE:"mini_project.c" LINE:105

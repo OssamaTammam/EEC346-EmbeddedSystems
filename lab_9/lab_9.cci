@@ -1,0 +1,7 @@
+VERSION:3 SOURCE_TIMESTAMP:589E7050
+NODE:M LEVEL:0 LINE:23 "Timer1_CLK"
+NODE:M LEVEL:0 LINE:24 "ICR1"
+NODE:I LEVEL:0 LINE:25 "D:\Uni\Programs\cvavr\inc\mega32a.h"
+NODE:I LEVEL:0 LINE:26 "D:\Uni\Programs\cvavr\inc\delay.h"
+NODE:I LEVEL:0 LINE:29 "D:\Uni\Programs\cvavr\inc\stdio.h"
+NODE:F LEVEL:0 LINE:31 "main(void)"

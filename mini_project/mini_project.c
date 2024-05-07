@@ -28,6 +28,9 @@ Data Stack size         : 512
 #include <interrupt.h>
 #include <delay.h>
 
+// Debouncing delay
+#define DEBOUNCE_DELAY_MS 20
+
 // Declare your global variables here
 #define sbi(port, bit) (port) |= (1 << (bit))
 #define cbi(port, bit) (port) &= ~(1 << (bit))
@@ -145,34 +148,43 @@ typedef enum {
 } MOTION;
 
 
+// Software debouncing
+unsigned int debounce = 0x55;
+
 // External Interrupt 0 service routine
 interrupt [EXT_INT0] void ext_int0_isr(void)
 {
-// Place your code here
-MOTION motion; // direction of detected motion
+    // Place your code here
+    delay_ms(DEBOUNCE_DELAY_MS);
+    MOTION motion; // direction of detected motion
 
 	screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value - turns display on
 
 	// check encoder phase B to determine direction of motion
 
 	if(bit_is_clear(PIND, PORTD3)) {
-		motion = MOTION_RIGHT;
-		dial.units++; // increment dial position
+		motion = MOTION_RIGHT;  
+        // delay_ms(50);
+		dial.units++; // increment dial position 
+        // delay_ms(50);
 		if(dial.units > 9) {
 			dial.units = 0; // reset units on overflow
 			dial.tens++; // increment tens digit
 			if(dial.tens > 9) dial.tens = 0; // reset on overflow
 		}
 	} else {
-		motion = MOTION_LEFT;
+		motion = MOTION_LEFT;  
+        // delay_ms(50);
 		dial.units--; // decrement dial position
+        // delay_ms(50);
 		if(dial.units < 0) {
 			dial.units = 9; // rollover on underflow
 			dial.tens--; // decrement tens digit
 			if(dial.tens < 0) dial.tens = 9; // rollover on underflow
 		}
 	}
-
+    
+    
 	// combination lock logic
 
 	switch(combo_state) {

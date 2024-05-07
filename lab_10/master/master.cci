@@ -1,0 +1,4 @@
+VERSION:3 SOURCE_TIMESTAMP:58A7696B
+NODE:I LEVEL:0 LINE:24 "D:\Uni\Programs\cvavr\inc\mega32a.h"
+NODE:F LEVEL:0 LINE:31 "SPI(unsigned char data)"
+NODE:F LEVEL:0 LINE:40 "main(void)"
