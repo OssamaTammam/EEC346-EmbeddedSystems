@@ -73,7 +73,7 @@ typedef enum {
 
 volatile PROG_STATE prog_state = PROG_0; // combination programming state machine variable
 
-#define SCREENSAVER_TIMEOUT_VALUE 10000 // display blank timeout value in 1/250 second increments (2,000 ~= 8 seconds)
+#define SCREENSAVER_TIMEOUT_VALUE 100000 // display blank timeout value in 1/250 second increments (2,000 ~= 8 seconds)
 unsigned int screensaver_timeout;
 
 // EEPROM memory map
@@ -149,34 +149,39 @@ typedef enum {
 
 
 // Software debouncing
-unsigned int debounce = 0x55;
+unsigned int software_debounce = 0x55;
 
 // External Interrupt 0 service routine
 interrupt [EXT_INT0] void ext_int0_isr(void)
-{
-    // Place your code here
-    delay_ms(DEBOUNCE_DELAY_MS);
+{                           
+    // Place your code here 
+    software_debounce = 0xAA;
     MOTION motion; // direction of detected motion
 
 	screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value - turns display on
 
 	// check encoder phase B to determine direction of motion
-
-	if(bit_is_clear(PIND, PORTD3)) {
-		motion = MOTION_RIGHT;  
-        // delay_ms(50);
-		dial.units++; // increment dial position 
-        // delay_ms(50);
+                         
+    delay_ms(DEBOUNCE_DELAY_MS);   
+    
+    // bit_is_clear(PIND, PORTD3) &&
+    if(software_debounce == 0xAA) {
+        motion = MOTION_RIGHT;
+    } else {
+        motion = MOTION_LEFT;
+    }
+                 
+    delay_ms(DEBOUNCE_DELAY_MS);   
+    
+	if(motion == MOTION_RIGHT) {
+	    dial.units++; // increment dial position 
 		if(dial.units > 9) {
 			dial.units = 0; // reset units on overflow
 			dial.tens++; // increment tens digit
 			if(dial.tens > 9) dial.tens = 0; // reset on overflow
 		}
 	} else {
-		motion = MOTION_LEFT;  
-        // delay_ms(50);
 		dial.units--; // decrement dial position
-        // delay_ms(50);
 		if(dial.units < 0) {
 			dial.units = 9; // rollover on underflow
 			dial.tens--; // decrement tens digit
@@ -184,7 +189,8 @@ interrupt [EXT_INT0] void ext_int0_isr(void)
 		}
 	}
     
-    
+    delay_ms(DEBOUNCE_DELAY_MS);   
+
 	// combination lock logic
 
 	switch(combo_state) {
@@ -239,6 +245,8 @@ interrupt [EXT_INT0] void ext_int0_isr(void)
 		default: // ??? unknown/unexpected state
 			break;
 	}
+               
+    GIFR |= (1 << INTF0);
 
 }
 
@@ -246,6 +254,7 @@ interrupt [EXT_INT0] void ext_int0_isr(void)
 interrupt [EXT_INT1] void ext_int1_isr(void)
 {
 // Place your code here
+    software_debounce = 0x55;
 
 }
 
@@ -328,6 +337,8 @@ static unsigned char digit = DIGIT_LEFT; // alternate between left & right digit
 		}
 
 		digit ^= 0x01; // toggle between left & right digits
+                       
+        delay_ms(DEBOUNCE_DELAY_MS);   
 
 		if(digit == DIGIT_LEFT) {
 			// display left digit
@@ -487,7 +498,9 @@ GIFR=(0<<INTF1) | (1<<INTF0) | (1<<INTF2);
 
 while (1)
       {      
-      // Place your code here
+      // Place your code here 
+                      
+      delay_ms(DEBOUNCE_DELAY_MS);   
        sleep_enter();
       // LED_blink(1);
       
