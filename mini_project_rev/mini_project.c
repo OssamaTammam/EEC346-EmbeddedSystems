@@ -141,20 +141,27 @@ SEGMENT LED_segment(unsigned char value)
 
 void LED_blink(unsigned char n)
 {
-	cli(); // Disable interrupts
-	while (n--)
-	{
-		PORTA = LED_segment(dial.tens); // Display tens digit
-		sbi(PORTB, PORTB0);				// Turn on left digit (tens)
-		delay_ms(BLINKING_DELAY_MS);
-		cbi(PORTB, PORTB0); // Turn off left digit (tens)
-
-		PORTA = LED_segment(dial.units); // Display units digit
-		sbi(PORTB, PORTB1);				 // Turn on right digit (units)
-		delay_ms(BLINKING_DELAY_MS);
-		cbi(PORTB, PORTB1); // Turn off right digit (units)
-	}
-	sei(); // Enable interrupts
+    cli(); // Disable interrupts
+    while (n--)
+    {
+        // Turn on both digits
+        sbi(PORTB, PORTB0); // Left digit (tens)
+        sbi(PORTB, PORTB1); // Right digit (units)
+        
+        // Display both digits
+        PORTA = LED_segment(dial.tens); // Tens digit
+        delay_ms(BLINKING_DELAY_MS);
+        
+        PORTA = LED_segment(dial.units); // Units digit
+        delay_ms(BLINKING_DELAY_MS);
+        
+        // Turn off both digits
+        cbi(PORTB, PORTB0); // Left digit (tens)
+        cbi(PORTB, PORTB1); // Right digit (units)
+        
+        delay_ms(BLINKING_DELAY_MS);
+    }
+    sei(); // Enable interrupts
 }
 
 typedef enum
@@ -189,7 +196,9 @@ interrupt[EXT_INT2] void ext_int2_isr(void)
 	static DIAL candidate[3]; // holder for candidate combination
 
 	// combination programming logic
-
+                               
+    delay_ms(50);
+    
 	switch (prog_state)
 	{
 
@@ -227,7 +236,10 @@ interrupt[EXT_INT2] void ext_int2_isr(void)
 
 	default: // ??? unknown/unexpected state
 		break;
-	}
+	}    
+    
+    delay_ms(50);
+
 }
 
 typedef enum

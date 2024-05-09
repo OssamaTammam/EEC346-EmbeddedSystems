@@ -1351,43 +1351,51 @@ _LED_segment:
 ; 0000 008F {
 _LED_blink:
 ; .FSTART _LED_blink
-; 0000 0090 	cli(); // Disable interrupts
+; 0000 0090     cli(); // Disable interrupts
 	ST   -Y,R26
 ;	n -> Y+0
 	cli
-; 0000 0091 	while (n--)
+; 0000 0091     while (n--)
 _0x5:
 	LD   R30,Y
 	SUBI R30,LOW(1)
 	ST   Y,R30
 	SUBI R30,-LOW(1)
 	BREQ _0x7
-; 0000 0092 	{
-; 0000 0093 		PORTA = LED_segment(dial.tens); // Display tens digit
+; 0000 0092     {
+; 0000 0093         // Turn on both digits
+; 0000 0094         sbi(PORTB, PORTB0); // Left digit (tens)
+	SBI  0x18,0
+; 0000 0095         sbi(PORTB, PORTB1); // Right digit (units)
+	SBI  0x18,1
+; 0000 0096 
+; 0000 0097         // Display both digits
+; 0000 0098         PORTA = LED_segment(dial.tens); // Tens digit
+	LDS  R26,_dial
 	CALL SUBOPT_0x0
-; 0000 0094 		sbi(PORTB, PORTB0);				// Turn on left digit (tens)
-; 0000 0095 		delay_ms(BLINKING_DELAY_MS);
-	LDI  R26,LOW(100)
-	LDI  R27,0
-	CALL _delay_ms
-; 0000 0096 		cbi(PORTB, PORTB0); // Turn off left digit (tens)
+; 0000 0099         delay_ms(BLINKING_DELAY_MS);
+; 0000 009A 
+; 0000 009B         PORTA = LED_segment(dial.units); // Units digit
+	__GETB2MN _dial,1
+	CALL SUBOPT_0x0
+; 0000 009C         delay_ms(BLINKING_DELAY_MS);
+; 0000 009D 
+; 0000 009E         // Turn off both digits
+; 0000 009F         cbi(PORTB, PORTB0); // Left digit (tens)
 	CBI  0x18,0
-; 0000 0097 
-; 0000 0098 		PORTA = LED_segment(dial.units); // Display units digit
-	CALL SUBOPT_0x1
-; 0000 0099 		sbi(PORTB, PORTB1);				 // Turn on right digit (units)
-; 0000 009A 		delay_ms(BLINKING_DELAY_MS);
+; 0000 00A0         cbi(PORTB, PORTB1); // Right digit (units)
+	CBI  0x18,1
+; 0000 00A1 
+; 0000 00A2         delay_ms(BLINKING_DELAY_MS);
 	LDI  R26,LOW(100)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 009B 		cbi(PORTB, PORTB1); // Turn off right digit (units)
-	CBI  0x18,1
-; 0000 009C 	}
+; 0000 00A3     }
 	RJMP _0x5
 _0x7:
-; 0000 009D 	sei(); // Enable interrupts
+; 0000 00A4     sei(); // Enable interrupts
 	sei
-; 0000 009E }
+; 0000 00A5 }
 	ADIW R28,1
 	RET
 ; .FEND
@@ -1403,45 +1411,45 @@ _0x7:
 ;
 ;// External Interrupt 0 service routine
 ;interrupt[EXT_INT0] void ext_int0_isr(void)
-; 0000 00AB {
+; 0000 00B2 {
 _ext_int0_isr:
 ; .FSTART _ext_int0_isr
 	ST   -Y,R30
 	ST   -Y,R31
 	IN   R30,SREG
 	ST   -Y,R30
-; 0000 00AC 	// Place your code here
-; 0000 00AD 	motion_direction = 0x55;
+; 0000 00B3 	// Place your code here
+; 0000 00B4 	motion_direction = 0x55;
 	LDI  R30,LOW(85)
 	LDI  R31,HIGH(85)
 	MOVW R8,R30
-; 0000 00AE 	GIFR |= (1 << INTF0); // Clear INT2 flag
+; 0000 00B5 	GIFR |= (1 << INTF0); // Clear INT2 flag
 	IN   R30,0x3A
 	ORI  R30,0x40
 	RJMP _0x54
-; 0000 00AF }
+; 0000 00B6 }
 ; .FEND
 ;
 ;// External Interrupt 1 service routine
 ;interrupt[EXT_INT1] void ext_int1_isr(void)
-; 0000 00B3 {
+; 0000 00BA {
 _ext_int1_isr:
 ; .FSTART _ext_int1_isr
 	ST   -Y,R30
 	ST   -Y,R31
 	IN   R30,SREG
 	ST   -Y,R30
-; 0000 00B4 	// Place your code here
-; 0000 00B5 	motion_direction = 0xAA;
+; 0000 00BB 	// Place your code here
+; 0000 00BC 	motion_direction = 0xAA;
 	LDI  R30,LOW(170)
 	LDI  R31,HIGH(170)
 	MOVW R8,R30
-; 0000 00B6 	GIFR |= (1 << INTF1); // Clear INT2 flag
+; 0000 00BD 	GIFR |= (1 << INTF1); // Clear INT2 flag
 	IN   R30,0x3A
 	ORI  R30,0x80
 _0x54:
 	OUT  0x3A,R30
-; 0000 00B7 }
+; 0000 00BE }
 	LD   R30,Y+
 	OUT  SREG,R30
 	LD   R31,Y+
@@ -1451,116 +1459,127 @@ _0x54:
 ;
 ;// External Interrupt 2 service routine
 ;interrupt[EXT_INT2] void ext_int2_isr(void)
-; 0000 00BB {
+; 0000 00C2 {
 _ext_int2_isr:
 ; .FSTART _ext_int2_isr
-	CALL SUBOPT_0x2
-; 0000 00BC 	// Place your code here
-; 0000 00BD 	static DIAL candidate[3]; // holder for candidate combination
-; 0000 00BE 
-; 0000 00BF 	// combination programming logic
-; 0000 00C0 
-; 0000 00C1 	switch (prog_state)
+	CALL SUBOPT_0x1
+; 0000 00C3 	// Place your code here
+; 0000 00C4 	static DIAL candidate[3]; // holder for candidate combination
+; 0000 00C5 
+; 0000 00C6 	// combination programming logic
+; 0000 00C7 
+; 0000 00C8     delay_ms(50);
+	LDI  R26,LOW(50)
+	LDI  R27,0
+	CALL _delay_ms
+; 0000 00C9 
+; 0000 00CA 	switch (prog_state)
 	LDS  R30,_prog_state
 	LDI  R31,0
-; 0000 00C2 	{
-; 0000 00C3 
-; 0000 00C4 	case PROG_0:						 // begin combination programming sequence
+; 0000 00CB 	{
+; 0000 00CC 
+; 0000 00CD 	case PROG_0:						 // begin combination programming sequence
 	SBIW R30,0
 	BRNE _0xB
-; 0000 00C5 		candidate[0].value = dial.value; // save current dial position
-	CALL SUBOPT_0x3
+; 0000 00CE 		candidate[0].value = dial.value; // save current dial position
+	CALL SUBOPT_0x2
 	STS  _candidate_S0000005000,R30
 	STS  _candidate_S0000005000+1,R31
-; 0000 00C6 		LED_blink(1);					 // blink display once to acknowledge 1st number saved
+; 0000 00CF 		LED_blink(1);					 // blink display once to acknowledge 1st number saved
 	LDI  R26,LOW(1)
 	RCALL _LED_blink
-; 0000 00C7 		prog_state = PROG_1;			 // advance to next state
+; 0000 00D0 		prog_state = PROG_1;			 // advance to next state
 	LDI  R30,LOW(1)
 	STS  _prog_state,R30
-; 0000 00C8 		break;
+; 0000 00D1 		break;
 	RJMP _0xA
-; 0000 00C9 
-; 0000 00CA 	case PROG_1: // entering 2nd number
+; 0000 00D2 
+; 0000 00D3 	case PROG_1: // entering 2nd number
 _0xB:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
 	BRNE _0xC
-; 0000 00CB 		// 2nd number must be different than 1st
-; 0000 00CC 		if (dial.value != candidate[0].value)
-	CALL SUBOPT_0x4
-	CALL SUBOPT_0x5
-	BREQ _0xD
-; 0000 00CD 		{
-; 0000 00CE 			candidate[1].value = dial.value; // save current dial position
+; 0000 00D4 		// 2nd number must be different than 1st
+; 0000 00D5 		if (dial.value != candidate[0].value)
 	CALL SUBOPT_0x3
+	CALL SUBOPT_0x4
+	BREQ _0xD
+; 0000 00D6 		{
+; 0000 00D7 			candidate[1].value = dial.value; // save current dial position
+	CALL SUBOPT_0x2
 	__PUTW1MN _candidate_S0000005000,2
-; 0000 00CF 			LED_blink(2);					 // blink display twice to acknowledge 2nd number saved
+; 0000 00D8 			LED_blink(2);					 // blink display twice to acknowledge 2nd number saved
 	LDI  R26,LOW(2)
 	RCALL _LED_blink
-; 0000 00D0 			prog_state = PROG_2;			 // advance to next state
+; 0000 00D9 			prog_state = PROG_2;			 // advance to next state
 	LDI  R30,LOW(2)
 	STS  _prog_state,R30
-; 0000 00D1 		}
-; 0000 00D2 		break;
+; 0000 00DA 		}
+; 0000 00DB 		break;
 _0xD:
 	RJMP _0xA
-; 0000 00D3 
-; 0000 00D4 	case PROG_2:
+; 0000 00DC 
+; 0000 00DD 	case PROG_2:
 _0xC:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
 	BRNE _0x10
-; 0000 00D5 		// 3rd number must be different than 2nd
-; 0000 00D6 		if (dial.value != candidate[1].value)
-	CALL SUBOPT_0x6
+; 0000 00DE 		// 3rd number must be different than 2nd
+; 0000 00DF 		if (dial.value != candidate[1].value)
 	CALL SUBOPT_0x5
-	BREQ _0xF
-; 0000 00D7 		{
-; 0000 00D8 			candidate[2].value = dial.value;							   // save current dial position
-	CALL SUBOPT_0x3
-	__PUTW1MN _candidate_S0000005000,4
-; 0000 00D9 			eeprom_write_word(&eeprom_combo[0].value, candidate[0].value); // save 1st number
 	CALL SUBOPT_0x4
+	BREQ _0xF
+; 0000 00E0 		{
+; 0000 00E1 			candidate[2].value = dial.value;							   // save current dial position
+	CALL SUBOPT_0x2
+	__PUTW1MN _candidate_S0000005000,4
+; 0000 00E2 			eeprom_write_word(&eeprom_combo[0].value, candidate[0].value); // save 1st number
+	CALL SUBOPT_0x3
 	LDI  R26,LOW(_eeprom_combo)
 	LDI  R27,HIGH(_eeprom_combo)
 	CALL __EEPROMWRW
-; 0000 00DA 			eeprom_write_word(&eeprom_combo[1].value, candidate[1].value); // save 2nd number
+; 0000 00E3 			eeprom_write_word(&eeprom_combo[1].value, candidate[1].value); // save 2nd number
 	__POINTW2MN _eeprom_combo,2
-	CALL SUBOPT_0x6
+	CALL SUBOPT_0x5
 	CALL __EEPROMWRW
-; 0000 00DB 			eeprom_write_word(&eeprom_combo[2].value, candidate[2].value); // save 3rd number
+; 0000 00E4 			eeprom_write_word(&eeprom_combo[2].value, candidate[2].value); // save 3rd number
 	__POINTW2MN _eeprom_combo,4
 	__GETW1MN _candidate_S0000005000,4
 	CALL __EEPROMWRW
-; 0000 00DC 			combo[0].value = candidate[0].value;						   // the new combination
-	CALL SUBOPT_0x4
+; 0000 00E5 			combo[0].value = candidate[0].value;						   // the new combination
+	CALL SUBOPT_0x3
 	STS  _combo,R30
 	STS  _combo+1,R31
-; 0000 00DD 			combo[1].value = candidate[1].value;						   // the new combination
-	CALL SUBOPT_0x6
+; 0000 00E6 			combo[1].value = candidate[1].value;						   // the new combination
+	CALL SUBOPT_0x5
 	__PUTW1MN _combo,2
-; 0000 00DE 			combo[2].value = candidate[2].value;						   // the new combination
+; 0000 00E7 			combo[2].value = candidate[2].value;						   // the new combination
 	__GETW1MN _candidate_S0000005000,4
 	__PUTW1MN _combo,4
-; 0000 00DF 			LED_blink(3);												   // blink display three times to acknowledge 3rd number saved
+; 0000 00E8 			LED_blink(3);												   // blink display three times to acknowledge 3rd number saved
 	LDI  R26,LOW(3)
 	RCALL _LED_blink
-; 0000 00E0 			prog_state = PROG_0;										   // start over
+; 0000 00E9 			prog_state = PROG_0;										   // start over
 	LDI  R30,LOW(0)
 	STS  _prog_state,R30
-; 0000 00E1 		}
-; 0000 00E2 		break;
+; 0000 00EA 		}
+; 0000 00EB 		break;
 _0xF:
-; 0000 00E3 
-; 0000 00E4 	default: // ??? unknown/unexpected state
+; 0000 00EC 
+; 0000 00ED 	default: // ??? unknown/unexpected state
 _0x10:
-; 0000 00E5 		break;
-; 0000 00E6 	}
+; 0000 00EE 		break;
+; 0000 00EF 	}
 _0xA:
-; 0000 00E7 }
+; 0000 00F0 
+; 0000 00F1     delay_ms(50);
+	LDI  R26,LOW(50)
+	LDI  R27,0
+	CALL _delay_ms
+; 0000 00F2 
+; 0000 00F3 }
 	RJMP _0x53
 ; .FEND
 ;
@@ -1572,102 +1591,108 @@ _0xA:
 ;
 ;// Timer1 overflow interrupt service routine
 ;interrupt[TIM1_OVF] void timer1_ovf_isr(void)
-; 0000 00F1 {
+; 0000 00FD {
 _timer1_ovf_isr:
 ; .FSTART _timer1_ovf_isr
-	CALL SUBOPT_0x2
-; 0000 00F2 	// Reinitialize Timer1 value
-; 0000 00F3 	TCNT1H = 0xD4CD >> 8;
+	CALL SUBOPT_0x1
+; 0000 00FE 	// Reinitialize Timer1 value
+; 0000 00FF 	TCNT1H = 0xD4CD >> 8;
 	LDI  R30,LOW(212)
 	OUT  0x2D,R30
-; 0000 00F4 	TCNT1L = 0xD4CD & 0xff;
+; 0000 0100 	TCNT1L = 0xD4CD & 0xff;
 	LDI  R30,LOW(205)
 	OUT  0x2C,R30
-; 0000 00F5 
-; 0000 00F6 	// Place your code here
-; 0000 00F7 	static unsigned char digit = DIGIT_LEFT; // alternate between left & right digits
-; 0000 00F8 
-; 0000 00F9 	if (screensaver_timeout)
+; 0000 0101 
+; 0000 0102 	// Place your code here
+; 0000 0103 	static unsigned char digit = DIGIT_LEFT; // alternate between left & right digits
+; 0000 0104 
+; 0000 0105 	if (screensaver_timeout)
 	MOV  R0,R6
 	OR   R0,R7
 	BREQ _0x11
-; 0000 00FA 	{
-; 0000 00FB 		cbi(PORTB, PORTB0); // turn off left digit (tens)
+; 0000 0106 	{
+; 0000 0107 		cbi(PORTB, PORTB0); // turn off left digit (tens)
 	CBI  0x18,0
-; 0000 00FC 		cbi(PORTB, PORTB1); // turn off right digit (units)
+; 0000 0108 		cbi(PORTB, PORTB1); // turn off right digit (units)
 	CBI  0x18,1
-; 0000 00FD 
-; 0000 00FE 		screensaver_timeout--; // decrement screensaver timeout value
+; 0000 0109 
+; 0000 010A 		screensaver_timeout--; // decrement screensaver timeout value
 	MOVW R30,R6
 	SBIW R30,1
 	MOVW R6,R30
-; 0000 00FF 		if (screensaver_timeout == 0)
+; 0000 010B 		if (screensaver_timeout == 0)
 	MOV  R0,R6
 	OR   R0,R7
 	BRNE _0x12
-; 0000 0100 		{
-; 0000 0101 			// shut down display function
-; 0000 0102 			eeprom_write_byte(&eeprom_locked, locked);		   // save locked/unlocked status
-	CALL SUBOPT_0x7
-; 0000 0103 			eeprom_write_word(&eeprom_dial.value, dial.value); // save current dial position
-	CALL SUBOPT_0x3
+; 0000 010C 		{
+; 0000 010D 			// shut down display function
+; 0000 010E 			eeprom_write_byte(&eeprom_locked, locked);		   // save locked/unlocked status
+	CALL SUBOPT_0x6
+; 0000 010F 			eeprom_write_word(&eeprom_dial.value, dial.value); // save current dial position
+	CALL SUBOPT_0x2
 	LDI  R26,LOW(_eeprom_dial)
 	LDI  R27,HIGH(_eeprom_dial)
 	CALL __EEPROMWRW
-; 0000 0104 			if (combo_state != COMBO_MATCH_3)
+; 0000 0110 			if (combo_state != COMBO_MATCH_3)
 	LDS  R26,_combo_state
 	CPI  R26,LOW(0x3)
 	BREQ _0x13
-; 0000 0105 				combo_state = COMBO_MATCH_0; // reset any combination attempts
+; 0000 0111 				combo_state = COMBO_MATCH_0; // reset any combination attempts
 	LDI  R30,LOW(0)
 	STS  _combo_state,R30
-; 0000 0106 			prog_state = PROG_0;			 // cancel any pending combination programming attempts
+; 0000 0112 			prog_state = PROG_0;			 // cancel any pending combination programming attempts
 _0x13:
 	LDI  R30,LOW(0)
 	STS  _prog_state,R30
-; 0000 0107 
-; 0000 0108 			return; // early exit from interrupt handler, leaving display blank; nothing left to do
+; 0000 0113 
+; 0000 0114 			return; // early exit from interrupt handler, leaving display blank; nothing left to do
 	RJMP _0x53
-; 0000 0109 		}
-; 0000 010A 
-; 0000 010B 		digit ^= 0x01; // toggle between left & right digits
+; 0000 0115 		}
+; 0000 0116 
+; 0000 0117 		digit ^= 0x01; // toggle between left & right digits
 _0x12:
 	LDS  R26,_digit_S0000006000
 	LDI  R30,LOW(1)
 	EOR  R30,R26
 	STS  _digit_S0000006000,R30
-; 0000 010C 
-; 0000 010D 		delay_ms(DEBOUNCE_DELAY_MS);
-	CALL SUBOPT_0x8
-; 0000 010E 
-; 0000 010F 		if (digit == DIGIT_LEFT)
+; 0000 0118 
+; 0000 0119 		delay_ms(DEBOUNCE_DELAY_MS);
+	CALL SUBOPT_0x7
+; 0000 011A 
+; 0000 011B 		if (digit == DIGIT_LEFT)
 	LDS  R30,_digit_S0000006000
 	CPI  R30,0
 	BRNE _0x14
-; 0000 0110 		{
-; 0000 0111 			// display left digit
-; 0000 0112 			PORTA = LED_segment(dial.tens);
-	CALL SUBOPT_0x0
-; 0000 0113 			sbi(PORTB, PORTB0); // turn on left digit (tens)
-; 0000 0114 		}
-; 0000 0115 		else
+; 0000 011C 		{
+; 0000 011D 			// display left digit
+; 0000 011E 			PORTA = LED_segment(dial.tens);
+	LDS  R26,_dial
+	RCALL _LED_segment
+	OUT  0x1B,R30
+; 0000 011F 			sbi(PORTB, PORTB0); // turn on left digit (tens)
+	SBI  0x18,0
+; 0000 0120 		}
+; 0000 0121 		else
 	RJMP _0x15
 _0x14:
-; 0000 0116 		{
-; 0000 0117 			// display right digit
-; 0000 0118 			PORTA = LED_segment(dial.units);
-	CALL SUBOPT_0x1
-; 0000 0119 			sbi(PORTB, PORTB1); // turn on right digit (units)
-; 0000 011A 		}
+; 0000 0122 		{
+; 0000 0123 			// display right digit
+; 0000 0124 			PORTA = LED_segment(dial.units);
+	__GETB2MN _dial,1
+	RCALL _LED_segment
+	OUT  0x1B,R30
+; 0000 0125 			sbi(PORTB, PORTB1); // turn on right digit (units)
+	SBI  0x18,1
+; 0000 0126 		}
 _0x15:
-; 0000 011B 	}
-; 0000 011C 
-; 0000 011D 	TIFR |= (1 << TOV1); // Clear Timer1 overflow interrupt flag
+; 0000 0127 	}
+; 0000 0128 
+; 0000 0129 	TIFR |= (1 << TOV1); // Clear Timer1 overflow interrupt flag
 _0x11:
 	IN   R30,0x38
 	ORI  R30,4
 	OUT  0x38,R30
-; 0000 011E }
+; 0000 012A }
 _0x53:
 	LD   R30,Y+
 	OUT  SREG,R30
@@ -1686,183 +1711,183 @@ _0x53:
 ; .FEND
 ;
 ;void main(void)
-; 0000 0121 {
+; 0000 012D {
 _main:
 ; .FSTART _main
-; 0000 0122 	// Declare your local variables here
-; 0000 0123 	MOTION motion;
-; 0000 0124 
-; 0000 0125 	// Input/Output Ports initialization
-; 0000 0126 	// Port A initialization
-; 0000 0127 	// Function: Bit7=In Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
-; 0000 0128 	DDRA = (0 << DDA7) | (1 << DDA6) | (1 << DDA5) | (1 << DDA4) | (1 << DDA3) | (1 << DDA2) | (1 << DDA1) | (1 << DDA0);
+; 0000 012E 	// Declare your local variables here
+; 0000 012F 	MOTION motion;
+; 0000 0130 
+; 0000 0131 	// Input/Output Ports initialization
+; 0000 0132 	// Port A initialization
+; 0000 0133 	// Function: Bit7=In Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
+; 0000 0134 	DDRA = (0 << DDA7) | (1 << DDA6) | (1 << DDA5) | (1 << DDA4) | (1 << DDA3) | (1 << DDA2) | (1 << DDA1) | (1 << DDA0);
 ;	motion -> R17
 	LDI  R30,LOW(127)
 	OUT  0x1A,R30
-; 0000 0129 	// State: Bit7=T Bit6=1 Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
-; 0000 012A 	PORTA = (0 << PORTA7) | (1 << PORTA6) | (1 << PORTA5) | (1 << PORTA4) | (1 << PORTA3) | (1 << PORTA2) | (1 << PORTA1) | ...
+; 0000 0135 	// State: Bit7=T Bit6=1 Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
+; 0000 0136 	PORTA = (0 << PORTA7) | (1 << PORTA6) | (1 << PORTA5) | (1 << PORTA4) | (1 << PORTA3) | (1 << PORTA2) | (1 << PORTA1) | ...
 	OUT  0x1B,R30
-; 0000 012B 
-; 0000 012C 	// Port B initialization
-; 0000 012D 	// Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=Out Bit0=Out
-; 0000 012E 	DDRB = (0 << DDB7) | (0 << DDB6) | (0 << DDB5) | (0 << DDB4) | (0 << DDB3) | (0 << DDB2) | (1 << DDB1) | (1 << DDB0);
+; 0000 0137 
+; 0000 0138 	// Port B initialization
+; 0000 0139 	// Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=Out Bit0=Out
+; 0000 013A 	DDRB = (0 << DDB7) | (0 << DDB6) | (0 << DDB5) | (0 << DDB4) | (0 << DDB3) | (0 << DDB2) | (1 << DDB1) | (1 << DDB0);
 	LDI  R30,LOW(3)
 	OUT  0x17,R30
-; 0000 012F 	// State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=P Bit1=0 Bit0=0
-; 0000 0130 	PORTB = (0 << PORTB7) | (0 << PORTB6) | (0 << PORTB5) | (0 << PORTB4) | (0 << PORTB3) | (1 << PORTB2) | (0 << PORTB1) | ...
+; 0000 013B 	// State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=P Bit1=0 Bit0=0
+; 0000 013C 	PORTB = (0 << PORTB7) | (0 << PORTB6) | (0 << PORTB5) | (0 << PORTB4) | (0 << PORTB3) | (1 << PORTB2) | (0 << PORTB1) | ...
 	LDI  R30,LOW(4)
 	OUT  0x18,R30
-; 0000 0131 
-; 0000 0132 	// Port C initialization
-; 0000 0133 	// Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
-; 0000 0134 	DDRC = (0 << DDC7) | (0 << DDC6) | (0 << DDC5) | (0 << DDC4) | (0 << DDC3) | (0 << DDC2) | (0 << DDC1) | (0 << DDC0);
+; 0000 013D 
+; 0000 013E 	// Port C initialization
+; 0000 013F 	// Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
+; 0000 0140 	DDRC = (0 << DDC7) | (0 << DDC6) | (0 << DDC5) | (0 << DDC4) | (0 << DDC3) | (0 << DDC2) | (0 << DDC1) | (0 << DDC0);
 	LDI  R30,LOW(0)
 	OUT  0x14,R30
-; 0000 0135 	// State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=T Bit1=T Bit0=T
-; 0000 0136 	PORTC = (0 << PORTC7) | (0 << PORTC6) | (0 << PORTC5) | (0 << PORTC4) | (0 << PORTC3) | (0 << PORTC2) | (0 << PORTC1) | ...
+; 0000 0141 	// State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=T Bit1=T Bit0=T
+; 0000 0142 	PORTC = (0 << PORTC7) | (0 << PORTC6) | (0 << PORTC5) | (0 << PORTC4) | (0 << PORTC3) | (0 << PORTC2) | (0 << PORTC1) | ...
 	OUT  0x15,R30
-; 0000 0137 
-; 0000 0138 	// Port D initialization
-; 0000 0139 	// Function: Bit7=In Bit6=Out Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
-; 0000 013A 	DDRD = (0 << DDD7) | (1 << DDD6) | (0 << DDD5) | (0 << DDD4) | (0 << DDD3) | (0 << DDD2) | (0 << DDD1) | (0 << DDD0);
+; 0000 0143 
+; 0000 0144 	// Port D initialization
+; 0000 0145 	// Function: Bit7=In Bit6=Out Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
+; 0000 0146 	DDRD = (0 << DDD7) | (1 << DDD6) | (0 << DDD5) | (0 << DDD4) | (0 << DDD3) | (0 << DDD2) | (0 << DDD1) | (0 << DDD0);
 	LDI  R30,LOW(64)
 	OUT  0x11,R30
-; 0000 013B 	// State: Bit7=T Bit6=1 Bit5=T Bit4=T Bit3=P Bit2=P Bit1=T Bit0=T
-; 0000 013C 	PORTD = (0 << PORTD7) | (1 << PORTD6) | (0 << PORTD5) | (0 << PORTD4) | (1 << PORTD3) | (1 << PORTD2) | (0 << PORTD1) | ...
+; 0000 0147 	// State: Bit7=T Bit6=1 Bit5=T Bit4=T Bit3=P Bit2=P Bit1=T Bit0=T
+; 0000 0148 	PORTD = (0 << PORTD7) | (1 << PORTD6) | (0 << PORTD5) | (0 << PORTD4) | (1 << PORTD3) | (1 << PORTD2) | (0 << PORTD1) | ...
 	LDI  R30,LOW(76)
 	OUT  0x12,R30
-; 0000 013D 
-; 0000 013E 	// Timer/Counter 1 initialization
-; 0000 013F 	// Clock source: System Clock
-; 0000 0140 	// Clock value: 11059.200 kHz
-; 0000 0141 	// Mode: Normal top=0xFFFF
-; 0000 0142 	// OC1A output: Disconnected
-; 0000 0143 	// OC1B output: Disconnected
-; 0000 0144 	// Noise Canceler: Off
-; 0000 0145 	// Input Capture on Falling Edge
-; 0000 0146 	// Timer Period: 0.99998 ms
-; 0000 0147 	// Timer1 Overflow Interrupt: On
-; 0000 0148 	// Input Capture Interrupt: Off
-; 0000 0149 	// Compare A Match Interrupt: Off
-; 0000 014A 	// Compare B Match Interrupt: Off
-; 0000 014B 	TCCR1A = (0 << COM1A1) | (0 << COM1A0) | (0 << COM1B1) | (0 << COM1B0) | (0 << WGM11) | (0 << WGM10);
+; 0000 0149 
+; 0000 014A 	// Timer/Counter 1 initialization
+; 0000 014B 	// Clock source: System Clock
+; 0000 014C 	// Clock value: 11059.200 kHz
+; 0000 014D 	// Mode: Normal top=0xFFFF
+; 0000 014E 	// OC1A output: Disconnected
+; 0000 014F 	// OC1B output: Disconnected
+; 0000 0150 	// Noise Canceler: Off
+; 0000 0151 	// Input Capture on Falling Edge
+; 0000 0152 	// Timer Period: 0.99998 ms
+; 0000 0153 	// Timer1 Overflow Interrupt: On
+; 0000 0154 	// Input Capture Interrupt: Off
+; 0000 0155 	// Compare A Match Interrupt: Off
+; 0000 0156 	// Compare B Match Interrupt: Off
+; 0000 0157 	TCCR1A = (0 << COM1A1) | (0 << COM1A0) | (0 << COM1B1) | (0 << COM1B0) | (0 << WGM11) | (0 << WGM10);
 	LDI  R30,LOW(0)
 	OUT  0x2F,R30
-; 0000 014C 	TCCR1B = (0 << ICNC1) | (0 << ICES1) | (0 << WGM13) | (0 << WGM12) | (0 << CS12) | (0 << CS11) | (1 << CS10);
+; 0000 0158 	TCCR1B = (0 << ICNC1) | (0 << ICES1) | (0 << WGM13) | (0 << WGM12) | (0 << CS12) | (0 << CS11) | (1 << CS10);
 	LDI  R30,LOW(1)
 	OUT  0x2E,R30
-; 0000 014D 	TCNT1H = 0xD4;
+; 0000 0159 	TCNT1H = 0xD4;
 	LDI  R30,LOW(212)
 	OUT  0x2D,R30
-; 0000 014E 	TCNT1L = 0xCD;
+; 0000 015A 	TCNT1L = 0xCD;
 	LDI  R30,LOW(205)
 	OUT  0x2C,R30
-; 0000 014F 	ICR1H = 0x00;
+; 0000 015B 	ICR1H = 0x00;
 	LDI  R30,LOW(0)
 	OUT  0x27,R30
-; 0000 0150 	ICR1L = 0x00;
+; 0000 015C 	ICR1L = 0x00;
 	OUT  0x26,R30
-; 0000 0151 	OCR1AH = 0x00;
+; 0000 015D 	OCR1AH = 0x00;
 	OUT  0x2B,R30
-; 0000 0152 	OCR1AL = 0x00;
+; 0000 015E 	OCR1AL = 0x00;
 	OUT  0x2A,R30
-; 0000 0153 	OCR1BH = 0x00;
+; 0000 015F 	OCR1BH = 0x00;
 	OUT  0x29,R30
-; 0000 0154 	OCR1BL = 0x00;
+; 0000 0160 	OCR1BL = 0x00;
 	OUT  0x28,R30
-; 0000 0155 
-; 0000 0156 	// Timer(s)/Counter(s) Interrupt(s) initialization
-; 0000 0157 	TIMSK = (0 << OCIE2) | (0 << TOIE2) | (0 << TICIE1) | (0 << OCIE1A) | (0 << OCIE1B) | (1 << TOIE1) | (0 << OCIE0) | (0  ...
+; 0000 0161 
+; 0000 0162 	// Timer(s)/Counter(s) Interrupt(s) initialization
+; 0000 0163 	TIMSK = (0 << OCIE2) | (0 << TOIE2) | (0 << TICIE1) | (0 << OCIE1A) | (0 << OCIE1B) | (1 << TOIE1) | (0 << OCIE0) | (0  ...
 	LDI  R30,LOW(4)
 	OUT  0x39,R30
-; 0000 0158 
-; 0000 0159 	// External Interrupt(s) initialization
-; 0000 015A 	// INT0: On
-; 0000 015B 	// INT0 Mode: Falling Edge
-; 0000 015C 	// INT1: On
-; 0000 015D 	// INT1 Mode: Falling Edge
-; 0000 015E 	// INT2: On
-; 0000 015F 	// INT2 Mode: Falling Edge
-; 0000 0160 	GICR |= (1 << INT1) | (1 << INT0) | (1 << INT2);
+; 0000 0164 
+; 0000 0165 	// External Interrupt(s) initialization
+; 0000 0166 	// INT0: On
+; 0000 0167 	// INT0 Mode: Falling Edge
+; 0000 0168 	// INT1: On
+; 0000 0169 	// INT1 Mode: Falling Edge
+; 0000 016A 	// INT2: On
+; 0000 016B 	// INT2 Mode: Falling Edge
+; 0000 016C 	GICR |= (1 << INT1) | (1 << INT0) | (1 << INT2);
 	IN   R30,0x3B
 	ORI  R30,LOW(0xE0)
 	OUT  0x3B,R30
-; 0000 0161 	MCUCR = (1 << ISC11) | (0 << ISC10) | (1 << ISC01) | (0 << ISC00);
+; 0000 016D 	MCUCR = (1 << ISC11) | (0 << ISC10) | (1 << ISC01) | (0 << ISC00);
 	LDI  R30,LOW(10)
 	OUT  0x35,R30
-; 0000 0162 	MCUCSR = (0 << ISC2);
+; 0000 016E 	MCUCSR = (0 << ISC2);
 	LDI  R30,LOW(0)
 	OUT  0x34,R30
-; 0000 0163 	GIFR = (1 << INTF1) | (1 << INTF0) | (1 << INTF2);
+; 0000 016F 	GIFR = (1 << INTF1) | (1 << INTF0) | (1 << INTF2);
 	LDI  R30,LOW(224)
 	OUT  0x3A,R30
-; 0000 0164 
-; 0000 0165 // Global enable interrupts
-; 0000 0166 #asm("sei")
+; 0000 0170 
+; 0000 0171 // Global enable interrupts
+; 0000 0172 #asm("sei")
 	sei
-; 0000 0167 
-; 0000 0168 	// Check eeprom first
-; 0000 0169 	locked = eeprom_read_byte(&eeprom_locked); // saved locked status
+; 0000 0173 
+; 0000 0174 	// Check eeprom first
+; 0000 0175 	locked = eeprom_read_byte(&eeprom_locked); // saved locked status
 	LDI  R26,LOW(_eeprom_locked)
 	LDI  R27,HIGH(_eeprom_locked)
 	CALL __EEPROMRDB
 	MOV  R5,R30
-; 0000 016A 	if (locked == STATUS_UNLOCKED)
+; 0000 0176 	if (locked == STATUS_UNLOCKED)
 	TST  R5
 	BRNE _0x16
-; 0000 016B 	{
-; 0000 016C 		unlock(); // unlocked
+; 0000 0177 	{
+; 0000 0178 		unlock(); // unlocked
 	SBI  0x12,6
 	CLR  R5
-; 0000 016D 	}
-; 0000 016E 	else if (locked == STATUS_LOCKED)
+; 0000 0179 	}
+; 0000 017A 	else if (locked == STATUS_LOCKED)
 	RJMP _0x17
 _0x16:
-; 0000 016F 	{
-; 0000 0170 		lock(); // locked
-; 0000 0171 	}
-; 0000 0172 	else
-; 0000 0173 	{
-; 0000 0174 		lock(); // unknown/unexpected state:  default is locked
+; 0000 017B 	{
+; 0000 017C 		lock(); // locked
+; 0000 017D 	}
+; 0000 017E 	else
+; 0000 017F 	{
+; 0000 0180 		lock(); // unknown/unexpected state:  default is locked
 _0x4E:
 	CBI  0x12,6
 	LDI  R30,LOW(1)
 	MOV  R5,R30
-; 0000 0175 	}
+; 0000 0181 	}
 _0x17:
-; 0000 0176 
-; 0000 0177 	if (locked == STATUS_LOCKED)
+; 0000 0182 
+; 0000 0183 	if (locked == STATUS_LOCKED)
 	LDI  R30,LOW(1)
 	CP   R30,R5
 	BRNE _0x1A
-; 0000 0178 	{
-; 0000 0179 		screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value
+; 0000 0184 	{
+; 0000 0185 		screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value
 	LDI  R30,LOW(500)
 	LDI  R31,HIGH(500)
 	MOVW R6,R30
-; 0000 017A 		combo_state = COMBO_MATCH_0;					 // nothing happening
+; 0000 0186 		combo_state = COMBO_MATCH_0;					 // nothing happening
 	LDI  R30,LOW(0)
 	RJMP _0x4F
-; 0000 017B 	}
-; 0000 017C 	else
+; 0000 0187 	}
+; 0000 0188 	else
 _0x1A:
-; 0000 017D 	{
-; 0000 017E 		screensaver_timeout = 0;	 // if unlocked, current dial position is 3rd number of combination:  DO NOT REVEAL
+; 0000 0189 	{
+; 0000 018A 		screensaver_timeout = 0;	 // if unlocked, current dial position is 3rd number of combination:  DO NOT REVEAL
 	CLR  R6
 	CLR  R7
-; 0000 017F 		combo_state = COMBO_MATCH_3; // unlocked, waiting for motion to relock
+; 0000 018B 		combo_state = COMBO_MATCH_3; // unlocked, waiting for motion to relock
 	LDI  R30,LOW(3)
 _0x4F:
 	STS  _combo_state,R30
-; 0000 0180 	}
-; 0000 0181 
-; 0000 0182 	dial.value = eeprom_read_word(&eeprom_dial.value); // saved dial position
+; 0000 018C 	}
+; 0000 018D 
+; 0000 018E 	dial.value = eeprom_read_word(&eeprom_dial.value); // saved dial position
 	LDI  R26,LOW(_eeprom_dial)
 	LDI  R27,HIGH(_eeprom_dial)
 	CALL __EEPROMRDW
 	STS  _dial,R30
 	STS  _dial+1,R31
-; 0000 0183 	if ((dial.units >= 0) && (dial.units <= 9) && (dial.tens >= 0) && (dial.tens <= 9))
+; 0000 018F 	if ((dial.units >= 0) && (dial.units <= 9) && (dial.tens >= 0) && (dial.tens <= 9))
 	__GETB2MN _dial,1
 	CPI  R26,0
 	BRLT _0x1D
@@ -1878,37 +1903,37 @@ _0x4F:
 _0x1D:
 	RJMP _0x1C
 _0x1E:
-; 0000 0184 	{
-; 0000 0185 		// saved dial position was valid; continue
-; 0000 0186 	}
-; 0000 0187 	else
+; 0000 0190 	{
+; 0000 0191 		// saved dial position was valid; continue
+; 0000 0192 	}
+; 0000 0193 	else
 	RJMP _0x1F
 _0x1C:
-; 0000 0188 	{
-; 0000 0189 		dial.units = 0; // reset dial position
+; 0000 0194 	{
+; 0000 0195 		dial.units = 0; // reset dial position
 	LDI  R30,LOW(0)
 	__PUTB1MN _dial,1
-; 0000 018A 		dial.tens = 0;
+; 0000 0196 		dial.tens = 0;
 	STS  _dial,R30
-; 0000 018B 	}
+; 0000 0197 	}
 _0x1F:
-; 0000 018C 
-; 0000 018D 	combo[0].value = eeprom_read_word(&eeprom_combo[0].value); // saved combination 1/3
+; 0000 0198 
+; 0000 0199 	combo[0].value = eeprom_read_word(&eeprom_combo[0].value); // saved combination 1/3
 	LDI  R26,LOW(_eeprom_combo)
 	LDI  R27,HIGH(_eeprom_combo)
 	CALL __EEPROMRDW
 	STS  _combo,R30
 	STS  _combo+1,R31
-; 0000 018E 	combo[1].value = eeprom_read_word(&eeprom_combo[1].value); // saved combination 2/3
+; 0000 019A 	combo[1].value = eeprom_read_word(&eeprom_combo[1].value); // saved combination 2/3
 	__POINTW2MN _eeprom_combo,2
 	CALL __EEPROMRDW
 	__PUTW1MN _combo,2
-; 0000 018F 	combo[2].value = eeprom_read_word(&eeprom_combo[2].value); // saved combination 3/3
+; 0000 019B 	combo[2].value = eeprom_read_word(&eeprom_combo[2].value); // saved combination 3/3
 	__POINTW2MN _eeprom_combo,4
 	CALL __EEPROMRDW
 	__PUTW1MN _combo,4
-; 0000 0190 
-; 0000 0191 	if ((combo[0].units >= 0) && (combo[0].units <= 9) && (combo[0].tens >= 0) && (combo[0].tens <= 9) && (combo[1].units > ...
+; 0000 019C 
+; 0000 019D 	if ((combo[0].units >= 0) && (combo[0].units <= 9) && (combo[0].tens >= 0) && (combo[0].tens <= 9) && (combo[1].units > ...
 	__GETB2MN _combo,1
 	CPI  R26,0
 	BRLT _0x21
@@ -1948,51 +1973,51 @@ _0x1F:
 _0x21:
 	RJMP _0x20
 _0x22:
-; 0000 0192 	{
-; 0000 0193 		// saved combination was valid; continue
-; 0000 0194 	}
-; 0000 0195 	else
+; 0000 019E 	{
+; 0000 019F 		// saved combination was valid; continue
+; 0000 01A0 	}
+; 0000 01A1 	else
 	RJMP _0x23
 _0x20:
-; 0000 0196 	{
-; 0000 0197 		combo[0].units = 3; // default combination 1/3
+; 0000 01A2 	{
+; 0000 01A3 		combo[0].units = 3; // default combination 1/3
 	LDI  R30,LOW(3)
 	__PUTB1MN _combo,1
-; 0000 0198 		combo[0].tens = 0;
+; 0000 01A4 		combo[0].tens = 0;
 	LDI  R30,LOW(0)
 	STS  _combo,R30
-; 0000 0199 		combo[1].units = 1; // default combination 2/3
+; 0000 01A5 		combo[1].units = 1; // default combination 2/3
 	LDI  R30,LOW(1)
 	__PUTB1MN _combo,3
-; 0000 019A 		combo[1].tens = 0;
+; 0000 01A6 		combo[1].tens = 0;
 	LDI  R30,LOW(0)
 	__PUTB1MN _combo,2
-; 0000 019B 		combo[2].units = 4; // default combination 3/3
+; 0000 01A7 		combo[2].units = 4; // default combination 3/3
 	LDI  R30,LOW(4)
 	__PUTB1MN _combo,5
-; 0000 019C 		combo[2].tens = 0;
+; 0000 01A8 		combo[2].tens = 0;
 	LDI  R30,LOW(0)
 	__PUTB1MN _combo,4
-; 0000 019D 	}
+; 0000 01A9 	}
 _0x23:
-; 0000 019E 
-; 0000 019F 	sei(); // enable global interrupts
+; 0000 01AA 
+; 0000 01AB 	sei(); // enable global interrupts
 	sei
-; 0000 01A0 
-; 0000 01A1 	sleep_enable();
+; 0000 01AC 
+; 0000 01AD 	sleep_enable();
 	RCALL _sleep_enable
-; 0000 01A2 
-; 0000 01A3 	while (1)
+; 0000 01AE 
+; 0000 01AF 	while (1)
 _0x24:
-; 0000 01A4 	{
-; 0000 01A5 
-; 0000 01A6 		screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value - turns display on
+; 0000 01B0 	{
+; 0000 01B1 
+; 0000 01B2 		screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value - turns display on
 	LDI  R30,LOW(500)
 	LDI  R31,HIGH(500)
 	MOVW R6,R30
-; 0000 01A7 
-; 0000 01A8 		// Wait for motion
-; 0000 01A9 		while (motion_direction != 0xAA && motion_direction != 0x55)
+; 0000 01B3 
+; 0000 01B4 		// Wait for motion
+; 0000 01B5 		while (motion_direction != 0xAA && motion_direction != 0x55)
 _0x27:
 	LDI  R30,LOW(170)
 	LDI  R31,HIGH(170)
@@ -2007,289 +2032,289 @@ _0x27:
 _0x2A:
 	RJMP _0x29
 _0x2B:
-; 0000 01AA 			;
+; 0000 01B6 			;
 	RJMP _0x27
 _0x29:
-; 0000 01AB 		// Determine motion direction
-; 0000 01AC 		switch (motion_direction)
+; 0000 01B7 		// Determine motion direction
+; 0000 01B8 		switch (motion_direction)
 	MOVW R30,R8
-; 0000 01AD 		{
-; 0000 01AE 		case 0xAA:
+; 0000 01B9 		{
+; 0000 01BA 		case 0xAA:
 	CPI  R30,LOW(0xAA)
 	LDI  R26,HIGH(0xAA)
 	CPC  R31,R26
 	BRNE _0x2F
-; 0000 01AF 			motion = MOTION_RIGHT;
+; 0000 01BB 			motion = MOTION_RIGHT;
 	LDI  R17,LOW(0)
-; 0000 01B0 			break;
+; 0000 01BC 			break;
 	RJMP _0x2E
-; 0000 01B1 		case 0x55:
+; 0000 01BD 		case 0x55:
 _0x2F:
 	CPI  R30,LOW(0x55)
 	LDI  R26,HIGH(0x55)
 	CPC  R31,R26
 	BRNE _0x31
-; 0000 01B2 			motion = MOTION_LEFT;
+; 0000 01BE 			motion = MOTION_LEFT;
 	LDI  R17,LOW(1)
-; 0000 01B3 			break;
-; 0000 01B4 		default:
+; 0000 01BF 			break;
+; 0000 01C0 		default:
 _0x31:
-; 0000 01B5 			// motion = null;
-; 0000 01B6 			break;
-; 0000 01B7 		}
+; 0000 01C1 			// motion = null;
+; 0000 01C2 			break;
+; 0000 01C3 		}
 _0x2E:
-; 0000 01B8 
-; 0000 01B9 		delay_ms(DEBOUNCE_DELAY_MS);
-	CALL SUBOPT_0x8
-; 0000 01BA 
-; 0000 01BB 		switch (motion)
+; 0000 01C4 
+; 0000 01C5 		delay_ms(DEBOUNCE_DELAY_MS);
+	CALL SUBOPT_0x7
+; 0000 01C6 
+; 0000 01C7 		switch (motion)
 	MOV  R30,R17
 	LDI  R31,0
-; 0000 01BC 		{
-; 0000 01BD 		case MOTION_RIGHT:
+; 0000 01C8 		{
+; 0000 01C9 		case MOTION_RIGHT:
 	SBIW R30,0
 	BRNE _0x35
-; 0000 01BE 		{
-; 0000 01BF 			dial.units++; // increment dial position
+; 0000 01CA 		{
+; 0000 01CB 			dial.units++; // increment dial position
 	__GETB1MN _dial,1
 	SUBI R30,-LOW(1)
 	__PUTB1MN _dial,1
 	SUBI R30,LOW(1)
-; 0000 01C0 			if (dial.units > 9)
+; 0000 01CC 			if (dial.units > 9)
 	__GETB2MN _dial,1
 	CPI  R26,LOW(0xA)
 	BRLT _0x36
-; 0000 01C1 			{
-; 0000 01C2 				dial.units = 0; // reset units on overflow
+; 0000 01CD 			{
+; 0000 01CE 				dial.units = 0; // reset units on overflow
 	LDI  R30,LOW(0)
 	__PUTB1MN _dial,1
-; 0000 01C3 				dial.tens++;	// increment tens digit
+; 0000 01CF 				dial.tens++;	// increment tens digit
 	LDS  R30,_dial
 	SUBI R30,-LOW(1)
 	STS  _dial,R30
-; 0000 01C4 				if (dial.tens > 9)
+; 0000 01D0 				if (dial.tens > 9)
 	LDS  R26,_dial
 	CPI  R26,LOW(0xA)
 	BRLT _0x37
-; 0000 01C5 					dial.tens = 0; // reset on overflow
+; 0000 01D1 					dial.tens = 0; // reset on overflow
 	LDI  R30,LOW(0)
 	STS  _dial,R30
-; 0000 01C6 			}
+; 0000 01D2 			}
 _0x37:
-; 0000 01C7 			break;
+; 0000 01D3 			break;
 _0x36:
 	RJMP _0x34
-; 0000 01C8 		}
-; 0000 01C9 
-; 0000 01CA 		case MOTION_LEFT:
+; 0000 01D4 		}
+; 0000 01D5 
+; 0000 01D6 		case MOTION_LEFT:
 _0x35:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
 	BRNE _0x3B
-; 0000 01CB 		{
-; 0000 01CC 			dial.units--; // decrement dial position
+; 0000 01D7 		{
+; 0000 01D8 			dial.units--; // decrement dial position
 	__GETB1MN _dial,1
 	SUBI R30,LOW(1)
 	__PUTB1MN _dial,1
 	SUBI R30,-LOW(1)
-; 0000 01CD 			if (dial.units < 0)
+; 0000 01D9 			if (dial.units < 0)
 	__GETB2MN _dial,1
 	CPI  R26,0
 	BRGE _0x39
-; 0000 01CE 			{
-; 0000 01CF 				dial.units = 9; // rollover on underflow
+; 0000 01DA 			{
+; 0000 01DB 				dial.units = 9; // rollover on underflow
 	LDI  R30,LOW(9)
 	__PUTB1MN _dial,1
-; 0000 01D0 				dial.tens--;	// decrement tens digit
+; 0000 01DC 				dial.tens--;	// decrement tens digit
 	LDS  R30,_dial
 	SUBI R30,LOW(1)
 	STS  _dial,R30
-; 0000 01D1 				if (dial.tens < 0)
+; 0000 01DD 				if (dial.tens < 0)
 	LDS  R26,_dial
 	CPI  R26,0
 	BRGE _0x3A
-; 0000 01D2 					dial.tens = 9; // rollover on underflow
+; 0000 01DE 					dial.tens = 9; // rollover on underflow
 	LDI  R30,LOW(9)
 	STS  _dial,R30
-; 0000 01D3 			}
+; 0000 01DF 			}
 _0x3A:
-; 0000 01D4 			break;
+; 0000 01E0 			break;
 _0x39:
-; 0000 01D5 		}
-; 0000 01D6 
-; 0000 01D7 		default:
+; 0000 01E1 		}
+; 0000 01E2 
+; 0000 01E3 		default:
 _0x3B:
-; 0000 01D8 			break;
-; 0000 01D9 		}
+; 0000 01E4 			break;
+; 0000 01E5 		}
 _0x34:
-; 0000 01DA 
-; 0000 01DB 		delay_ms(DEBOUNCE_DELAY_MS);
-	CALL SUBOPT_0x8
-; 0000 01DC 
-; 0000 01DD 		// Check combination match
-; 0000 01DE 		switch (combo_state)
+; 0000 01E6 
+; 0000 01E7 		delay_ms(DEBOUNCE_DELAY_MS);
+	CALL SUBOPT_0x7
+; 0000 01E8 
+; 0000 01E9 		// Check combination match
+; 0000 01EA 		switch (combo_state)
 	LDS  R30,_combo_state
 	LDI  R31,0
-; 0000 01DF 		{
-; 0000 01E0 
-; 0000 01E1 		case COMBO_MATCH_0:
+; 0000 01EB 		{
+; 0000 01EC 
+; 0000 01ED 		case COMBO_MATCH_0:
 	SBIW R30,0
 	BRNE _0x3F
-; 0000 01E2 			// detect retrograde motion
-; 0000 01E3 			if (motion == MOTION_LEFT)
+; 0000 01EE 			// detect retrograde motion
+; 0000 01EF 			if (motion == MOTION_LEFT)
 	CPI  R17,1
 	BRNE _0x40
-; 0000 01E4 			{
-; 0000 01E5 				combo_state = COMBO_MATCH_0; // start over
+; 0000 01F0 			{
+; 0000 01F1 				combo_state = COMBO_MATCH_0; // start over
 	LDI  R30,LOW(0)
 	RJMP _0x50
-; 0000 01E6 			}
-; 0000 01E7 			else
+; 0000 01F2 			}
+; 0000 01F3 			else
 _0x40:
-; 0000 01E8 			{
-; 0000 01E9 				// look for 1st number match
-; 0000 01EA 				if (dial.value == combo[0].value)
+; 0000 01F4 			{
+; 0000 01F5 				// look for 1st number match
+; 0000 01F6 				if (dial.value == combo[0].value)
 	LDS  R30,_combo
 	LDS  R31,_combo+1
-	CALL SUBOPT_0x5
+	CALL SUBOPT_0x4
 	BRNE _0x42
-; 0000 01EB 				{
-; 0000 01EC 					// matched first number of combination
-; 0000 01ED 					combo_state = COMBO_MATCH_1; // advance to next state
+; 0000 01F7 				{
+; 0000 01F8 					// matched first number of combination
+; 0000 01F9 					combo_state = COMBO_MATCH_1; // advance to next state
 	LDI  R30,LOW(1)
 _0x50:
 	STS  _combo_state,R30
-; 0000 01EE 				}
-; 0000 01EF 			}
+; 0000 01FA 				}
+; 0000 01FB 			}
 _0x42:
-; 0000 01F0 			break;
+; 0000 01FC 			break;
 	RJMP _0x3E
-; 0000 01F1 
-; 0000 01F2 		case COMBO_MATCH_1:
+; 0000 01FD 
+; 0000 01FE 		case COMBO_MATCH_1:
 _0x3F:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
 	BRNE _0x43
-; 0000 01F3 			// detect retrograde motion
-; 0000 01F4 			if (motion == MOTION_RIGHT)
+; 0000 01FF 			// detect retrograde motion
+; 0000 0200 			if (motion == MOTION_RIGHT)
 	CPI  R17,0
 	BRNE _0x44
-; 0000 01F5 			{
-; 0000 01F6 				combo_state = COMBO_MATCH_0; // start over
+; 0000 0201 			{
+; 0000 0202 				combo_state = COMBO_MATCH_0; // start over
 	LDI  R30,LOW(0)
 	RJMP _0x51
-; 0000 01F7 			}
-; 0000 01F8 			else
+; 0000 0203 			}
+; 0000 0204 			else
 _0x44:
-; 0000 01F9 			{
-; 0000 01FA 				// look for 2nd number match
-; 0000 01FB 				if (dial.value == combo[1].value)
+; 0000 0205 			{
+; 0000 0206 				// look for 2nd number match
+; 0000 0207 				if (dial.value == combo[1].value)
 	__GETW1MN _combo,2
-	CALL SUBOPT_0x5
+	CALL SUBOPT_0x4
 	BRNE _0x46
-; 0000 01FC 				{
-; 0000 01FD 					// matched second number of combination
-; 0000 01FE 					combo_state = COMBO_MATCH_2; // advance to next state
+; 0000 0208 				{
+; 0000 0209 					// matched second number of combination
+; 0000 020A 					combo_state = COMBO_MATCH_2; // advance to next state
 	LDI  R30,LOW(2)
 _0x51:
 	STS  _combo_state,R30
-; 0000 01FF 				}
-; 0000 0200 			}
+; 0000 020B 				}
+; 0000 020C 			}
 _0x46:
-; 0000 0201 			break;
+; 0000 020D 			break;
 	RJMP _0x3E
-; 0000 0202 
-; 0000 0203 		case COMBO_MATCH_2:
+; 0000 020E 
+; 0000 020F 		case COMBO_MATCH_2:
 _0x43:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
 	BRNE _0x47
-; 0000 0204 			// detect retrograde motion
-; 0000 0205 			if (motion == MOTION_LEFT)
+; 0000 0210 			// detect retrograde motion
+; 0000 0211 			if (motion == MOTION_LEFT)
 	CPI  R17,1
 	BRNE _0x48
-; 0000 0206 			{
-; 0000 0207 				combo_state = COMBO_MATCH_0; // start over
+; 0000 0212 			{
+; 0000 0213 				combo_state = COMBO_MATCH_0; // start over
 	LDI  R30,LOW(0)
 	RJMP _0x52
-; 0000 0208 			}
-; 0000 0209 			else
+; 0000 0214 			}
+; 0000 0215 			else
 _0x48:
-; 0000 020A 			{
-; 0000 020B 				// look for 3rd number match
-; 0000 020C 				if (dial.value == combo[2].value)
+; 0000 0216 			{
+; 0000 0217 				// look for 3rd number match
+; 0000 0218 				if (dial.value == combo[2].value)
 	__GETW1MN _combo,4
-	CALL SUBOPT_0x5
+	CALL SUBOPT_0x4
 	BRNE _0x4A
-; 0000 020D 				{
-; 0000 020E 					unlock();								   // combination satisfied
+; 0000 0219 				{
+; 0000 021A 					unlock();								   // combination satisfied
 	SBI  0x12,6
 	CLR  R5
-; 0000 020F 					eeprom_write_byte(&eeprom_locked, locked); // save unlocked status
-	CALL SUBOPT_0x7
-; 0000 0210 					LED_blink(5);
+; 0000 021B 					eeprom_write_byte(&eeprom_locked, locked); // save unlocked status
+	CALL SUBOPT_0x6
+; 0000 021C 					LED_blink(5);
 	LDI  R26,LOW(5)
 	RCALL _LED_blink
-; 0000 0211 					combo_state = COMBO_MATCH_3; // advance to next state
+; 0000 021D 					combo_state = COMBO_MATCH_3; // advance to next state
 	LDI  R30,LOW(3)
 _0x52:
 	STS  _combo_state,R30
-; 0000 0212 				}
-; 0000 0213 			}
+; 0000 021E 				}
+; 0000 021F 			}
 _0x4A:
-; 0000 0214 			break;
+; 0000 0220 			break;
 	RJMP _0x3E
-; 0000 0215 
-; 0000 0216 		case COMBO_MATCH_3:
+; 0000 0221 
+; 0000 0222 		case COMBO_MATCH_3:
 _0x47:
 	CPI  R30,LOW(0x3)
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
 	BRNE _0x4C
-; 0000 0217 			lock();									   // any motion relocks
+; 0000 0223 			lock();									   // any motion relocks
 	CBI  0x12,6
 	LDI  R30,LOW(1)
 	MOV  R5,R30
-; 0000 0218 			eeprom_write_byte(&eeprom_locked, locked); // save locked status
-	CALL SUBOPT_0x7
-; 0000 0219 			combo_state = COMBO_MATCH_0;			   // start over
+; 0000 0224 			eeprom_write_byte(&eeprom_locked, locked); // save locked status
+	CALL SUBOPT_0x6
+; 0000 0225 			combo_state = COMBO_MATCH_0;			   // start over
 	LDI  R30,LOW(0)
 	STS  _combo_state,R30
-; 0000 021A 			break;
-; 0000 021B 
-; 0000 021C 		default: // ??? unknown/unexpected state
+; 0000 0226 			break;
+; 0000 0227 
+; 0000 0228 		default: // ??? unknown/unexpected state
 _0x4C:
-; 0000 021D 			break;
-; 0000 021E 		}
+; 0000 0229 			break;
+; 0000 022A 		}
 _0x3E:
-; 0000 021F 
-; 0000 0220 		delay_ms(DEBOUNCE_DELAY_MS);
-	CALL SUBOPT_0x8
-; 0000 0221 
-; 0000 0222 		motion_direction = 0xFF;
+; 0000 022B 
+; 0000 022C 		delay_ms(DEBOUNCE_DELAY_MS);
+	CALL SUBOPT_0x7
+; 0000 022D 
+; 0000 022E 		motion_direction = 0xFF;
 	LDI  R30,LOW(255)
 	LDI  R31,HIGH(255)
 	MOVW R8,R30
-; 0000 0223 		prev_dial.value = dial.value; // Initialize prev_dial with the initial dial position
-	CALL SUBOPT_0x3
+; 0000 022F 		prev_dial.value = dial.value; // Initialize prev_dial with the initial dial position
+	CALL SUBOPT_0x2
 	STS  _prev_dial,R30
 	STS  _prev_dial+1,R31
-; 0000 0224 
-; 0000 0225 		// Disable Timer1 overflow interrupt before entering sleep mode
-; 0000 0226 		// TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
-; 0000 0227 
-; 0000 0228 		// Enter sleep mode
-; 0000 0229 		sleep_enter();
+; 0000 0230 
+; 0000 0231 		// Disable Timer1 overflow interrupt before entering sleep mode
+; 0000 0232 		// TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
+; 0000 0233 
+; 0000 0234 		// Enter sleep mode
+; 0000 0235 		sleep_enter();
 	sleep
-; 0000 022A 
-; 0000 022B 		// Re-enable Timer1 overflow interrupt after waking up
-; 0000 022C 		// TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
-; 0000 022D 	}
+; 0000 0236 
+; 0000 0237 		// Re-enable Timer1 overflow interrupt after waking up
+; 0000 0238 		// TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
+; 0000 0239 	}
 	RJMP _0x24
-; 0000 022E }
+; 0000 023A }
 _0x4D:
 	RJMP _0x4D
 ; .FEND
@@ -2343,24 +2368,16 @@ _digit_S0000006000:
 	.BYTE 0x1
 
 	.CSEG
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
 SUBOPT_0x0:
-	LDS  R26,_dial
 	CALL _LED_segment
 	OUT  0x1B,R30
-	SBI  0x18,0
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x1:
-	__GETB2MN _dial,1
-	CALL _LED_segment
-	OUT  0x1B,R30
-	SBI  0x18,1
-	RET
+	LDI  R26,LOW(100)
+	LDI  R27,0
+	JMP  _delay_ms
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:8 WORDS
-SUBOPT_0x2:
+SUBOPT_0x1:
 	ST   -Y,R0
 	ST   -Y,R1
 	ST   -Y,R15
@@ -2377,19 +2394,19 @@ SUBOPT_0x2:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:5 WORDS
-SUBOPT_0x3:
+SUBOPT_0x2:
 	LDS  R30,_dial
 	LDS  R31,_dial+1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x4:
+SUBOPT_0x3:
 	LDS  R30,_candidate_S0000005000
 	LDS  R31,_candidate_S0000005000+1
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:13 WORDS
-SUBOPT_0x5:
+SUBOPT_0x4:
 	LDS  R26,_dial
 	LDS  R27,_dial+1
 	CP   R30,R26
@@ -2397,12 +2414,12 @@ SUBOPT_0x5:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x6:
+SUBOPT_0x5:
 	__GETW1MN _candidate_S0000005000,2
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x7:
+SUBOPT_0x6:
 	MOV  R30,R5
 	LDI  R26,LOW(_eeprom_locked)
 	LDI  R27,HIGH(_eeprom_locked)
@@ -2410,7 +2427,7 @@ SUBOPT_0x7:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x8:
+SUBOPT_0x7:
 	LDI  R26,LOW(10)
 	LDI  R27,0
 	JMP  _delay_ms
