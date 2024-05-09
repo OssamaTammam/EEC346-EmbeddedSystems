@@ -2,10 +2,10 @@
 This program was created by the
 CodeWizardAVR V3.14 Advanced
 Automatic Program Generator
-� Copyright 1998-2014 Pavel Haiduc, HP InfoTech s.r.l.
+Copyright 1998-2014 Pavel Haiduc, HP InfoTech s.r.l.
 http://www.hpinfotech.com
 
-Project : mini_project_finaaaal
+Project : mini_project
 Version :
 Date    : 24-Apr-2024
 Author  :
@@ -28,14 +28,14 @@ Data Stack size         : 512
 #include <interrupt.h>
 #include <delay.h>
 
-// Debouncing delay
-#define DEBOUNCE_DELAY_MS 20
-
 // Declare your global variables here
 #define sbi(port, bit) (port) |= (1 << (bit))
 #define cbi(port, bit) (port) &= ~(1 << (bit))
 
 #define bit_is_clear(sfr, bit) (!(sfr & (1 << bit)))
+
+#define DEBOUNCE_DELAY_MS 20
+#define BLINKING_DELAY_MS 100
 
 typedef union
 {
@@ -47,7 +47,8 @@ typedef union
 	unsigned int value; // alias
 } DIAL;					// virtual dial position
 
-volatile DIAL dial;		// virtual dial position
+volatile DIAL dial; // virtual dial position
+volatile DIAL prev_dial;
 volatile DIAL combo[3]; // combination
 
 typedef enum
@@ -77,7 +78,7 @@ typedef enum
 
 volatile PROG_STATE prog_state = PROG_0; // combination programming state machine variable
 
-#define SCREENSAVER_TIMEOUT_VALUE 100000 // display blank timeout value in 1/250 second increments (2,000 ~= 8 seconds)
+#define SCREENSAVER_TIMEOUT_VALUE 2000 // display blank timeout value in 1/250 second increments (2,000 ~= 8 seconds)
 unsigned int screensaver_timeout;
 
 // EEPROM memory map
@@ -85,7 +86,7 @@ unsigned int screensaver_timeout;
 EEMEM unsigned char eeprom_do_not_use; // .bad luck - do not use the first location in EEPROM
 EEMEM unsigned char eeprom_locked;	   // saved locked status:  0=unlocked, 1=locked
 EEMEM DIAL eeprom_dial;				   // saved dial position
-EEMEM DIAL eeprom_combo[3];			   // programmed combination
+EEMEM DIAL eeprom_combo[3];
 
 // lock functions
 
@@ -144,12 +145,12 @@ void LED_blink(unsigned char n)
 	while (n--)
 	{
 
-		cli();				  // disable interrupts (prevents display multiplexing)
-		PORTA = 0b11111111;	  // all segments off
-		delay_ms(200);		  // ~1 second delay, with display off
-		GIFR |= (1 << INTF2); // Clear INT2 flag
-		sei();				  // re-enable interrupts
-		delay_ms(200);		  // ~1 second delay, with display on
+		cli();						 // disable interrupts (prevents display multiplexing)
+		PORTA = 0b11111111;			 // all segments off
+		delay_ms(BLINKING_DELAY_MS); // ~1 second delay, with display off
+		GIFR |= (1 << INTF2);		 // Clear INT2 flag
+		sei();						 // re-enable interrupts
+		delay_ms(BLINKING_DELAY_MS); // ~1 second delay, with display on
 	}
 }
 
@@ -160,134 +161,22 @@ typedef enum
 } MOTION;
 
 // Software debouncing
-unsigned int software_debounce = 0x55;
+unsigned int motion_direction; // 0xAA = right, 0x55 = left;
 
 // External Interrupt 0 service routine
 interrupt[EXT_INT0] void ext_int0_isr(void)
 {
 	// Place your code here
-	software_debounce = 0xAA;
-	MOTION motion; // direction of detected motion
-
-	screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value - turns display on
-
-	// check encoder phase B to determine direction of motion
-
-	delay_ms(DEBOUNCE_DELAY_MS);
-
-	// bit_is_clear(PIND, PORTD3) &&
-	if (software_debounce == 0xAA)
-	{
-		motion = MOTION_RIGHT;
-	}
-	else
-	{
-		motion = MOTION_LEFT;
-	}
-
-	delay_ms(DEBOUNCE_DELAY_MS);
-
-	if (motion == MOTION_RIGHT)
-	{
-		dial.units++; // increment dial position
-		if (dial.units > 9)
-		{
-			dial.units = 0; // reset units on overflow
-			dial.tens++;	// increment tens digit
-			if (dial.tens > 9)
-				dial.tens = 0; // reset on overflow
-		}
-	}
-	else
-	{
-		dial.units--; // decrement dial position
-		if (dial.units < 0)
-		{
-			dial.units = 9; // rollover on underflow
-			dial.tens--;	// decrement tens digit
-			if (dial.tens < 0)
-				dial.tens = 9; // rollover on underflow
-		}
-	}
-
-	delay_ms(DEBOUNCE_DELAY_MS);
-
-	// combination lock logic
-
-	switch (combo_state)
-	{
-
-	case COMBO_MATCH_0:
-		// detect retrograde motion
-		if (motion == MOTION_LEFT)
-		{
-			combo_state = COMBO_MATCH_0; // start over
-		}
-		else
-		{
-			// look for 1st number match
-			if (dial.value == combo[0].value)
-			{
-				// matched first number of combination
-				combo_state = COMBO_MATCH_1; // advance to next state
-			}
-		}
-		break;
-
-	case COMBO_MATCH_1:
-		// detect retrograde motion
-		if (motion == MOTION_RIGHT)
-		{
-			combo_state = COMBO_MATCH_0; // start over
-		}
-		else
-		{
-			// look for 2nd number match
-			if (dial.value == combo[1].value)
-			{
-				// matched second number of combination
-				combo_state = COMBO_MATCH_2; // advance to next state
-			}
-		}
-		break;
-
-	case COMBO_MATCH_2:
-		// detect retrograde motion
-		if (motion == MOTION_LEFT)
-		{
-			combo_state = COMBO_MATCH_0; // start over
-		}
-		else
-		{
-			// look for 3rd number match
-			if (dial.value == combo[2].value)
-			{
-				unlock();								   // combination satisfied
-				eeprom_write_byte(&eeprom_locked, locked); // save unlocked status
-				LED_blink(5);
-				combo_state = COMBO_MATCH_3; // advance to next state
-			}
-		}
-		break;
-
-	case COMBO_MATCH_3:
-		lock();									   // any motion relocks
-		eeprom_write_byte(&eeprom_locked, locked); // save locked status
-		combo_state = COMBO_MATCH_0;			   // start over
-		break;
-
-	default: // ??? unknown/unexpected state
-		break;
-	}
-
-	GIFR |= (1 << INTF0);
+	motion_direction = 0x55;
+	GIFR |= (1 << INTF0); // Clear INT2 flag
 }
 
 // External Interrupt 1 service routine
 interrupt[EXT_INT1] void ext_int1_isr(void)
 {
 	// Place your code here
-	software_debounce = 0x55;
+	motion_direction = 0xAA;
+	GIFR |= (1 << INTF1); // Clear INT2 flag
 }
 
 // External Interrupt 2 service routine
@@ -336,8 +225,6 @@ interrupt[EXT_INT2] void ext_int2_isr(void)
 	default: // ??? unknown/unexpected state
 		break;
 	}
-
-	GIFR |= (1 << INTF2); // Clear INT2 flag
 }
 
 typedef enum
@@ -346,17 +233,17 @@ typedef enum
 	DIGIT_RIGHT
 } DIGIT;
 
-// Timer 0 overflow interrupt service routine
-interrupt[TIM0_OVF] void timer0_ovf_isr(void)
+// Timer1 overflow interrupt service routine
+interrupt[TIM1_OVF] void timer1_ovf_isr(void)
 {
-	// Reinitialize Timer 0 value
-	TCNT0 = 0x4F;
+	// Reinitialize Timer1 value
+	TCNT1H = 0xCA00 >> 8;
+	TCNT1L = 0xCA00 & 0xff;
 	// Place your code here
 	static unsigned char digit = DIGIT_LEFT; // alternate between left & right digits
 
 	if (screensaver_timeout)
 	{
-
 		cbi(PORTB, PORTB0); // turn off left digit (tens)
 		cbi(PORTB, PORTB1); // turn off right digit (units)
 
@@ -390,20 +277,14 @@ interrupt[TIM0_OVF] void timer0_ovf_isr(void)
 			sbi(PORTB, PORTB1); // turn on right digit (units)
 		}
 	}
-}
 
-// Timer1 overflow interrupt service routine
-interrupt[TIM1_OVF] void timer1_ovf_isr(void)
-{
-	// Reinitialize Timer1 value
-	TCNT1H = 0x5333 >> 8;
-	TCNT1L = 0x5333 & 0xff;
-	// Place your code here
+	TIFR |= (1 << TOV1); // Clear Timer1 overflow interrupt flag
 }
 
 void main(void)
 {
 	// Declare your local variables here
+	MOTION motion;
 
 	// Input/Output Ports initialization
 	// Port A initialization
@@ -430,33 +311,23 @@ void main(void)
 	// State: Bit7=T Bit6=1 Bit5=T Bit4=T Bit3=P Bit2=P Bit1=T Bit0=T
 	PORTD = (0 << PORTD7) | (1 << PORTD6) | (0 << PORTD5) | (0 << PORTD4) | (1 << PORTD3) | (1 << PORTD2) | (0 << PORTD1) | (0 << PORTD0);
 
-	// Timer/Counter 0 initialization
-	// Clock source: System Clock
-	// Clock value: 172.800 kHz
-	// Mode: Normal top=0xFF
-	// OC0 output: Disconnected
-	// Timer Period: 1.0243 ms
-	TCCR0 = (0 << WGM00) | (0 << COM01) | (0 << COM00) | (0 << WGM01) | (0 << CS02) | (1 << CS01) | (1 << CS00);
-	TCNT0 = 0x4F;
-	OCR0 = 0x00;
-
 	// Timer/Counter 1 initialization
 	// Clock source: System Clock
-	// Clock value: 10.800 kHz
+	// Clock value: 1382.400 kHz
 	// Mode: Normal top=0xFFFF
 	// OC1A output: Disconnected
 	// OC1B output: Disconnected
 	// Noise Canceler: Off
 	// Input Capture on Falling Edge
-	// Timer Period: 4.096 s
+	// Timer Period: 10 ms
 	// Timer1 Overflow Interrupt: On
 	// Input Capture Interrupt: Off
 	// Compare A Match Interrupt: Off
 	// Compare B Match Interrupt: Off
 	TCCR1A = (0 << COM1A1) | (0 << COM1A0) | (0 << COM1B1) | (0 << COM1B0) | (0 << WGM11) | (0 << WGM10);
-	TCCR1B = (0 << ICNC1) | (0 << ICES1) | (0 << WGM13) | (0 << WGM12) | (1 << CS12) | (0 << CS11) | (1 << CS10);
-	TCNT1H = 0x53;
-	TCNT1L = 0x33;
+	TCCR1B = (0 << ICNC1) | (0 << ICES1) | (0 << WGM13) | (0 << WGM12) | (0 << CS12) | (1 << CS11) | (0 << CS10);
+	TCNT1H = 0xCA;
+	TCNT1L = 0x00;
 	ICR1H = 0x00;
 	ICR1L = 0x00;
 	OCR1AH = 0x00;
@@ -465,22 +336,24 @@ void main(void)
 	OCR1BL = 0x00;
 
 	// Timer(s)/Counter(s) Interrupt(s) initialization
-	TIMSK = (0 << OCIE2) | (0 << TOIE2) | (0 << TICIE1) | (0 << OCIE1A) | (0 << OCIE1B) | (1 << TOIE1) | (0 << OCIE0) | (1 << TOIE0);
+	TIMSK = (0 << OCIE2) | (0 << TOIE2) | (0 << TICIE1) | (0 << OCIE1A) | (0 << OCIE1B) | (1 << TOIE1) | (0 << OCIE0) | (0 << TOIE0);
 
 	// External Interrupt(s) initialization
 	// INT0: On
 	// INT0 Mode: Falling Edge
-	// INT1: Off
+	// INT1: On
+	// INT1 Mode: Falling Edge
 	// INT2: On
 	// INT2 Mode: Falling Edge
-	GICR |= (0 << INT1) | (1 << INT0) | (1 << INT2);
-	MCUCR = (0 << ISC11) | (0 << ISC10) | (1 << ISC01) | (0 << ISC00);
+	GICR |= (1 << INT1) | (1 << INT0) | (1 << INT2);
+	MCUCR = (1 << ISC11) | (0 << ISC10) | (1 << ISC01) | (0 << ISC00);
 	MCUCSR = (0 << ISC2);
-	GIFR = (0 << INTF1) | (1 << INTF0) | (1 << INTF2);
+	GIFR = (1 << INTF1) | (1 << INTF0) | (1 << INTF2);
 
 // Global enable interrupts
 #asm("sei")
 
+	// Check eeprom first
 	locked = eeprom_read_byte(&eeprom_locked); // saved locked status
 	if (locked == STATUS_UNLOCKED)
 	{
@@ -541,10 +414,139 @@ void main(void)
 
 	while (1)
 	{
-		// Place your code here
+		// Wait for motion
+		while (motion_direction != 0xAA && motion_direction != 0x55)
+			;
+
+		// Determine motion direction
+		switch (motion_direction)
+		{
+		case 0xAA:
+			motion = MOTION_RIGHT;
+			break;
+		case 0x55:
+			motion = MOTION_LEFT;
+			break;
+		default:
+			// motion = null;
+			break;
+		}
 
 		delay_ms(DEBOUNCE_DELAY_MS);
-		sleep_enter();
-		// LED_blink(1);
+
+		switch (motion)
+		{
+		case MOTION_RIGHT:
+		{
+			dial.units++; // increment dial position
+			if (dial.units > 9)
+			{
+				dial.units = 0; // reset units on overflow
+				dial.tens++;	// increment tens digit
+				if (dial.tens > 9)
+					dial.tens = 0; // reset on overflow
+			}
+			break;
+		}
+
+		case MOTION_LEFT:
+		{
+			dial.units--; // decrement dial position
+			if (dial.units < 0)
+			{
+				dial.units = 9; // rollover on underflow
+				dial.tens--;	// decrement tens digit
+				if (dial.tens < 0)
+					dial.tens = 9; // rollover on underflow
+			}
+			break;
+		}
+
+		default:
+			break;
+		}
+
+		delay_ms(DEBOUNCE_DELAY_MS);
+
+		// Check combination match
+		switch (combo_state)
+		{
+
+		case COMBO_MATCH_0:
+			// detect retrograde motion
+			if (motion == MOTION_LEFT)
+			{
+				combo_state = COMBO_MATCH_0; // start over
+			}
+			else
+			{
+				// look for 1st number match
+				if (dial.value == combo[0].value)
+				{
+					// matched first number of combination
+					combo_state = COMBO_MATCH_1; // advance to next state
+				}
+			}
+			break;
+
+		case COMBO_MATCH_1:
+			// detect retrograde motion
+			if (motion == MOTION_RIGHT)
+			{
+				combo_state = COMBO_MATCH_0; // start over
+			}
+			else
+			{
+				// look for 2nd number match
+				if (dial.value == combo[1].value)
+				{
+					// matched second number of combination
+					combo_state = COMBO_MATCH_2; // advance to next state
+				}
+			}
+			break;
+
+		case COMBO_MATCH_2:
+			// detect retrograde motion
+			if (motion == MOTION_LEFT)
+			{
+				combo_state = COMBO_MATCH_0; // start over
+			}
+			else
+			{
+				// look for 3rd number match
+				if (dial.value == combo[2].value)
+				{
+					unlock();								   // combination satisfied
+					eeprom_write_byte(&eeprom_locked, locked); // save unlocked status
+					LED_blink(5);
+					combo_state = COMBO_MATCH_3; // advance to next state
+				}
+			}
+			break;
+
+		case COMBO_MATCH_3:
+			lock();									   // any motion relocks
+			eeprom_write_byte(&eeprom_locked, locked); // save locked status
+			combo_state = COMBO_MATCH_0;			   // start over
+			break;
+
+		default: // ??? unknown/unexpected state
+			break;
+		}
+
+		delay_ms(DEBOUNCE_DELAY_MS);
+
+		motion_direction = 0xFF;
+		prev_dial.value = dial.value; // Initialize prev_dial with the initial dial position
+
+		// Disable Timer1 overflow interrupt before entering sleep mode
+		// TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
+
+		// Enter sleep mode
+		// sleep_enter();
+
+		// Re-enable Timer1 overflow interrupt after waking up
+		// TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
 	}
 }
