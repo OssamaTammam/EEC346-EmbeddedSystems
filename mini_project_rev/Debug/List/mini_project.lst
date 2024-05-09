@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.1.30  D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_project.asm Thu May 09 18:50:35 2024
+AVRASM ver. 2.1.30  D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_project.asm Thu May 09 20:29:20 2024
 
 D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_project.asm(1087): warning: Register r5 already defined by the .DEF directive
 D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_project.asm(1088): warning: Register r6 already defined by the .DEF directive
@@ -1193,7 +1193,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ;Project : mini_project
                  ;Version :
                  ;Date    : 24-Apr-2024
-                 ;Author  :
+                 ;Author  : Ossama
                  ;Company :
                  ;Comments:
                  ;
@@ -1343,7 +1343,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 00004e e0b0      	LDI  R27,HIGH(0)
 00004f e5e4      	LDI  R30,LOW(_0x4*2)
 000050 e0f0      	LDI  R31,HIGH(_0x4*2)
-000051 940e 0326 	CALL __INITLOCB
+000051 940e 0320 	CALL __INITLOCB
                  ;	value -> Y+12
                  ;	LED_segment_lookup_table -> Y+0
 000053 85ec      	LDD  R30,Y+12
@@ -1364,7 +1364,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 008F {
                  _LED_blink:
                  ; .FSTART _LED_blink
-                 ; 0000 0090     cli(); // Disable interrupts
+                 ; 0000 0090 	cli(); // Disable interrupts
 00005c 93aa      	ST   -Y,R26
                  ;	n -> Y+0
 00005d 94f8      	cli
@@ -1376,29 +1376,29 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 000061 5fef      	SUBI R30,-LOW(1)
 000062 f079      	BREQ _0x7
                  ; 0000 0092 	{
-                 ; 0000 0093         PORTA = LED_segment(dial.tens); // Display tens digit
-000063 940e 02b7 	CALL SUBOPT_0x0
-                 ; 0000 0094         sbi(PORTB, PORTB0); // Turn on left digit (tens)
-                 ; 0000 0095         delay_ms(BLINKING_DELAY_MS);
+                 ; 0000 0093 		PORTA = LED_segment(dial.tens); // Display tens digit
+000063 940e 02b1 	CALL SUBOPT_0x0
+                 ; 0000 0094 		sbi(PORTB, PORTB0);				// Turn on left digit (tens)
+                 ; 0000 0095 		delay_ms(BLINKING_DELAY_MS);
 000065 e6a4      	LDI  R26,LOW(100)
 000066 e0b0      	LDI  R27,0
-000067 940e 02f3 	CALL _delay_ms
-                 ; 0000 0096         cbi(PORTB, PORTB0); // Turn off left digit (tens)
+000067 940e 02ed 	CALL _delay_ms
+                 ; 0000 0096 		cbi(PORTB, PORTB0); // Turn off left digit (tens)
 000069 98c0      	CBI  0x18,0
                  ; 0000 0097 
-                 ; 0000 0098         PORTA = LED_segment(dial.units); // Display units digit
-00006a 940e 02be 	CALL SUBOPT_0x1
-                 ; 0000 0099         sbi(PORTB, PORTB1); // Turn on right digit (units)
-                 ; 0000 009A         delay_ms(BLINKING_DELAY_MS);
+                 ; 0000 0098 		PORTA = LED_segment(dial.units); // Display units digit
+00006a 940e 02b8 	CALL SUBOPT_0x1
+                 ; 0000 0099 		sbi(PORTB, PORTB1);				 // Turn on right digit (units)
+                 ; 0000 009A 		delay_ms(BLINKING_DELAY_MS);
 00006c e6a4      	LDI  R26,LOW(100)
 00006d e0b0      	LDI  R27,0
-00006e 940e 02f3 	CALL _delay_ms
-                 ; 0000 009B         cbi(PORTB, PORTB1); // Turn off right digit (units)
+00006e 940e 02ed 	CALL _delay_ms
+                 ; 0000 009B 		cbi(PORTB, PORTB1); // Turn off right digit (units)
 000070 98c1      	CBI  0x18,1
                  ; 0000 009C 	}
 000071 cfec      	RJMP _0x5
                  _0x7:
-                 ; 0000 009D     sei(); // Enable interrupts
+                 ; 0000 009D 	sei(); // Enable interrupts
 000072 9478      	sei
                  ; 0000 009E }
 000073 9621      	ADIW R28,1
@@ -1467,7 +1467,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 00BB {
                  _ext_int2_isr:
                  ; .FSTART _ext_int2_isr
-00008e 940e 02c5 	CALL SUBOPT_0x2
+00008e 940e 02bf 	CALL SUBOPT_0x2
                  ; 0000 00BC 	// Place your code here
                  ; 0000 00BD 	static DIAL candidate[3]; // holder for candidate combination
                  ; 0000 00BE 
@@ -1482,7 +1482,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 000093 9730      	SBIW R30,0
 000094 f461      	BRNE _0xB
                  ; 0000 00C5 		candidate[0].value = dial.value; // save current dial position
-000095 940e 02d3 	CALL SUBOPT_0x3
+000095 940e 02cd 	CALL SUBOPT_0x3
 000097 93e0 026c 	STS  _candidate_S0000005000,R30
 000099 93f0 026d 	STS  _candidate_S0000005000+1,R31
                  ; 0000 00C6 		LED_blink(1);					 // blink display once to acknowledge 1st number saved
@@ -1502,12 +1502,12 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 0000a4 f489      	BRNE _0xC
                  ; 0000 00CB 		// 2nd number must be different than 1st
                  ; 0000 00CC 		if (dial.value != candidate[0].value)
-0000a5 940e 02d8 	CALL SUBOPT_0x4
-0000a7 940e 02dd 	CALL SUBOPT_0x5
+0000a5 940e 02d2 	CALL SUBOPT_0x4
+0000a7 940e 02d7 	CALL SUBOPT_0x5
 0000a9 f059      	BREQ _0xD
                  ; 0000 00CD 		{
                  ; 0000 00CE 			candidate[1].value = dial.value; // save current dial position
-0000aa 940e 02d3 	CALL SUBOPT_0x3
+0000aa 940e 02cd 	CALL SUBOPT_0x3
                 +
 0000ac 93e0 026e+STS _candidate_S0000005000 + ( 2 ) , R30
 0000ae 93f0 026f+STS _candidate_S0000005000 + ( 2 ) + 1 , R31
@@ -1531,28 +1531,28 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 0000b9 f5c1      	BRNE _0x10
                  ; 0000 00D5 		// 3rd number must be different than 2nd
                  ; 0000 00D6 		if (dial.value != candidate[1].value)
-0000ba 940e 02e4 	CALL SUBOPT_0x6
-0000bc 940e 02dd 	CALL SUBOPT_0x5
+0000ba 940e 02de 	CALL SUBOPT_0x6
+0000bc 940e 02d7 	CALL SUBOPT_0x5
 0000be f199      	BREQ _0xF
                  ; 0000 00D7 		{
                  ; 0000 00D8 			candidate[2].value = dial.value;							   // save current dial position
-0000bf 940e 02d3 	CALL SUBOPT_0x3
+0000bf 940e 02cd 	CALL SUBOPT_0x3
                 +
 0000c1 93e0 0270+STS _candidate_S0000005000 + ( 4 ) , R30
 0000c3 93f0 0271+STS _candidate_S0000005000 + ( 4 ) + 1 , R31
                  	__PUTW1MN _candidate_S0000005000,4
                  ; 0000 00D9 			eeprom_write_word(&eeprom_combo[0].value, candidate[0].value); // save 1st number
-0000c5 940e 02d8 	CALL SUBOPT_0x4
+0000c5 940e 02d2 	CALL SUBOPT_0x4
 0000c7 e0a3      	LDI  R26,LOW(_eeprom_combo)
 0000c8 e0b0      	LDI  R27,HIGH(_eeprom_combo)
-0000c9 940e 030d 	CALL __EEPROMWRW
+0000c9 940e 0307 	CALL __EEPROMWRW
                  ; 0000 00DA 			eeprom_write_word(&eeprom_combo[1].value, candidate[1].value); // save 2nd number
                 +
 0000cb e0a5     +LDI R26 , LOW ( _eeprom_combo + ( 2 ) )
 0000cc e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 2 ) )
                  	__POINTW2MN _eeprom_combo,2
-0000cd 940e 02e4 	CALL SUBOPT_0x6
-0000cf 940e 030d 	CALL __EEPROMWRW
+0000cd 940e 02de 	CALL SUBOPT_0x6
+0000cf 940e 0307 	CALL __EEPROMWRW
                  ; 0000 00DB 			eeprom_write_word(&eeprom_combo[2].value, candidate[2].value); // save 3rd number
                 +
 0000d1 e0a7     +LDI R26 , LOW ( _eeprom_combo + ( 4 ) )
@@ -1562,13 +1562,13 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 0000d3 91e0 0270+LDS R30 , _candidate_S0000005000 + ( 4 )
 0000d5 91f0 0271+LDS R31 , _candidate_S0000005000 + ( 4 ) + 1
                  	__GETW1MN _candidate_S0000005000,4
-0000d7 940e 030d 	CALL __EEPROMWRW
+0000d7 940e 0307 	CALL __EEPROMWRW
                  ; 0000 00DC 			combo[0].value = candidate[0].value;						   // the new combination
-0000d9 940e 02d8 	CALL SUBOPT_0x4
+0000d9 940e 02d2 	CALL SUBOPT_0x4
 0000db 93e0 0264 	STS  _combo,R30
 0000dd 93f0 0265 	STS  _combo+1,R31
                  ; 0000 00DD 			combo[1].value = candidate[1].value;						   // the new combination
-0000df 940e 02e4 	CALL SUBOPT_0x6
+0000df 940e 02de 	CALL SUBOPT_0x6
                 +
 0000e1 93e0 0266+STS _combo + ( 2 ) , R30
 0000e3 93f0 0267+STS _combo + ( 2 ) + 1 , R31
@@ -1612,7 +1612,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 00F1 {
                  _timer1_ovf_isr:
                  ; .FSTART _timer1_ovf_isr
-0000f3 940e 02c5 	CALL SUBOPT_0x2
+0000f3 940e 02bf 	CALL SUBOPT_0x2
                  ; 0000 00F2 	// Reinitialize Timer1 value
                  ; 0000 00F3 	TCNT1H = 0xD4CD >> 8;
 0000f5 ede4      	LDI  R30,LOW(212)
@@ -1645,12 +1645,12 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 0100 		{
                  ; 0000 0101 			// shut down display function
                  ; 0000 0102 			eeprom_write_byte(&eeprom_locked, locked);		   // save locked/unlocked status
-000104 940e 02e9 	CALL SUBOPT_0x7
+000104 940e 02e3 	CALL SUBOPT_0x7
                  ; 0000 0103 			eeprom_write_word(&eeprom_dial.value, dial.value); // save current dial position
-000106 940e 02d3 	CALL SUBOPT_0x3
+000106 940e 02cd 	CALL SUBOPT_0x3
 000108 e0a1      	LDI  R26,LOW(_eeprom_dial)
 000109 e0b0      	LDI  R27,HIGH(_eeprom_dial)
-00010a 940e 030d 	CALL __EEPROMWRW
+00010a 940e 0307 	CALL __EEPROMWRW
                  ; 0000 0104 			if (combo_state != COMBO_MATCH_3)
 00010c 91a0 026a 	LDS  R26,_combo_state
 00010e 30a3      	CPI  R26,LOW(0x3)
@@ -1675,7 +1675,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 00011b 93e0 0272 	STS  _digit_S0000006000,R30
                  ; 0000 010C 
                  ; 0000 010D 		delay_ms(DEBOUNCE_DELAY_MS);
-00011d 940e 02ef 	CALL SUBOPT_0x8
+00011d 940e 02e9 	CALL SUBOPT_0x8
                  ; 0000 010E 
                  ; 0000 010F 		if (digit == DIGIT_LEFT)
 00011f 91e0 0272 	LDS  R30,_digit_S0000006000
@@ -1684,7 +1684,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 0110 		{
                  ; 0000 0111 			// display left digit
                  ; 0000 0112 			PORTA = LED_segment(dial.tens);
-000123 940e 02b7 	CALL SUBOPT_0x0
+000123 940e 02b1 	CALL SUBOPT_0x0
                  ; 0000 0113 			sbi(PORTB, PORTB0); // turn on left digit (tens)
                  ; 0000 0114 		}
                  ; 0000 0115 		else
@@ -1693,7 +1693,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 0116 		{
                  ; 0000 0117 			// display right digit
                  ; 0000 0118 			PORTA = LED_segment(dial.units);
-000126 940e 02be 	CALL SUBOPT_0x1
+000126 940e 02b8 	CALL SUBOPT_0x1
                  ; 0000 0119 			sbi(PORTB, PORTB1); // turn on right digit (units)
                  ; 0000 011A 		}
                  _0x15:
@@ -1842,7 +1842,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 0169 	locked = eeprom_read_byte(&eeprom_locked); // saved locked status
 000162 e0a0      	LDI  R26,LOW(_eeprom_locked)
 000163 e0b0      	LDI  R27,HIGH(_eeprom_locked)
-000164 940e 0301 	CALL __EEPROMRDB
+000164 940e 02fb 	CALL __EEPROMRDB
 000166 2e5e      	MOV  R5,R30
                  ; 0000 016A 	if (locked == STATUS_UNLOCKED)
 000167 2055      	TST  R5
@@ -1896,7 +1896,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 0182 	dial.value = eeprom_read_word(&eeprom_dial.value); // saved dial position
 00017c e0a1      	LDI  R26,LOW(_eeprom_dial)
 00017d e0b0      	LDI  R27,HIGH(_eeprom_dial)
-00017e 940e 02fd 	CALL __EEPROMRDW
+00017e 940e 02f7 	CALL __EEPROMRDW
 000180 93e0 0260 	STS  _dial,R30
 000182 93f0 0261 	STS  _dial+1,R31
                  ; 0000 0183 	if ((dial.units >= 0) && (dial.units <= 9) && (dial.tens >= 0) && (dial.tens <= 9))
@@ -1939,7 +1939,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 018D 	combo[0].value = eeprom_read_word(&eeprom_combo[0].value); // saved combination 1/3
 00019b e0a3      	LDI  R26,LOW(_eeprom_combo)
 00019c e0b0      	LDI  R27,HIGH(_eeprom_combo)
-00019d 940e 02fd 	CALL __EEPROMRDW
+00019d 940e 02f7 	CALL __EEPROMRDW
 00019f 93e0 0264 	STS  _combo,R30
 0001a1 93f0 0265 	STS  _combo+1,R31
                  ; 0000 018E 	combo[1].value = eeprom_read_word(&eeprom_combo[1].value); // saved combination 2/3
@@ -1947,7 +1947,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 0001a3 e0a5     +LDI R26 , LOW ( _eeprom_combo + ( 2 ) )
 0001a4 e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 2 ) )
                  	__POINTW2MN _eeprom_combo,2
-0001a5 940e 02fd 	CALL __EEPROMRDW
+0001a5 940e 02f7 	CALL __EEPROMRDW
                 +
 0001a7 93e0 0266+STS _combo + ( 2 ) , R30
 0001a9 93f0 0267+STS _combo + ( 2 ) + 1 , R31
@@ -1957,7 +1957,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 0001ab e0a7     +LDI R26 , LOW ( _eeprom_combo + ( 4 ) )
 0001ac e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 4 ) )
                  	__POINTW2MN _eeprom_combo,4
-0001ad 940e 02fd 	CALL __EEPROMRDW
+0001ad 940e 02f7 	CALL __EEPROMRDW
                 +
 0001af 93e0 0268+STS _combo + ( 4 ) , R30
 0001b1 93f0 0269+STS _combo + ( 4 ) + 1 , R31
@@ -2065,7 +2065,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 0001f7 9478      	sei
                  ; 0000 01A0 
                  ; 0000 01A1 	sleep_enable();
-0001f8 d0ba      	RCALL _sleep_enable
+0001f8 d0b4      	RCALL _sleep_enable
                  ; 0000 01A2 
                  ; 0000 01A3 	while (1)
                  _0x24:
@@ -2125,7 +2125,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  _0x2E:
                  ; 0000 01B8 
                  ; 0000 01B9 		delay_ms(DEBOUNCE_DELAY_MS);
-000214 940e 02ef 	CALL SUBOPT_0x8
+000214 940e 02e9 	CALL SUBOPT_0x8
                  ; 0000 01BA 
                  ; 0000 01BB 		switch (motion)
 000216 2fe1      	MOV  R30,R17
@@ -2226,7 +2226,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  _0x34:
                  ; 0000 01DA 
                  ; 0000 01DB 		delay_ms(DEBOUNCE_DELAY_MS);
-000251 940e 02ef 	CALL SUBOPT_0x8
+000251 940e 02e9 	CALL SUBOPT_0x8
                  ; 0000 01DC 
                  ; 0000 01DD 		// Check combination match
                  ; 0000 01DE 		switch (combo_state)
@@ -2253,7 +2253,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 01EA 				if (dial.value == combo[0].value)
 00025c 91e0 0264 	LDS  R30,_combo
 00025e 91f0 0265 	LDS  R31,_combo+1
-000260 940e 02dd 	CALL SUBOPT_0x5
+000260 940e 02d7 	CALL SUBOPT_0x5
 000262 f419      	BRNE _0x42
                  ; 0000 01EB 				{
                  ; 0000 01EC 					// matched first number of combination
@@ -2291,7 +2291,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 00026f 91e0 0266+LDS R30 , _combo + ( 2 )
 000271 91f0 0267+LDS R31 , _combo + ( 2 ) + 1
                  	__GETW1MN _combo,2
-000273 940e 02dd 	CALL SUBOPT_0x5
+000273 940e 02d7 	CALL SUBOPT_0x5
 000275 f419      	BRNE _0x46
                  ; 0000 01FC 				{
                  ; 0000 01FD 					// matched second number of combination
@@ -2329,14 +2329,14 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 000282 91e0 0268+LDS R30 , _combo + ( 4 )
 000284 91f0 0269+LDS R31 , _combo + ( 4 ) + 1
                  	__GETW1MN _combo,4
-000286 940e 02dd 	CALL SUBOPT_0x5
+000286 940e 02d7 	CALL SUBOPT_0x5
 000288 f449      	BRNE _0x4A
                  ; 0000 020D 				{
                  ; 0000 020E 					unlock();								   // combination satisfied
 000289 9a96      	SBI  0x12,6
 00028a 2455      	CLR  R5
                  ; 0000 020F 					eeprom_write_byte(&eeprom_locked, locked); // save unlocked status
-00028b 940e 02e9 	CALL SUBOPT_0x7
+00028b 940e 02e3 	CALL SUBOPT_0x7
                  ; 0000 0210 					LED_blink(5);
 00028d e0a5      	LDI  R26,LOW(5)
 00028e ddcd      	RCALL _LED_blink
@@ -2361,7 +2361,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 000298 e0e1      	LDI  R30,LOW(1)
 000299 2e5e      	MOV  R5,R30
                  ; 0000 0218 			eeprom_write_byte(&eeprom_locked, locked); // save locked status
-00029a 940e 02e9 	CALL SUBOPT_0x7
+00029a 940e 02e3 	CALL SUBOPT_0x7
                  ; 0000 0219 			combo_state = COMBO_MATCH_0;			   // start over
 00029c e0e0      	LDI  R30,LOW(0)
 00029d 93e0 026a 	STS  _combo_state,R30
@@ -2374,37 +2374,31 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  _0x3E:
                  ; 0000 021F 
                  ; 0000 0220 		delay_ms(DEBOUNCE_DELAY_MS);
-00029f 940e 02ef 	CALL SUBOPT_0x8
+00029f 940e 02e9 	CALL SUBOPT_0x8
                  ; 0000 0221 
                  ; 0000 0222 		motion_direction = 0xFF;
 0002a1 efef      	LDI  R30,LOW(255)
 0002a2 e0f0      	LDI  R31,HIGH(255)
 0002a3 014f      	MOVW R8,R30
                  ; 0000 0223 		prev_dial.value = dial.value; // Initialize prev_dial with the initial dial position
-0002a4 940e 02d3 	CALL SUBOPT_0x3
+0002a4 940e 02cd 	CALL SUBOPT_0x3
 0002a6 93e0 0262 	STS  _prev_dial,R30
 0002a8 93f0 0263 	STS  _prev_dial+1,R31
                  ; 0000 0224 
                  ; 0000 0225 		// Disable Timer1 overflow interrupt before entering sleep mode
-                 ; 0000 0226 		TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
-0002aa b7e9      	IN   R30,0x39
-0002ab 7feb      	ANDI R30,0xFB
-0002ac bfe9      	OUT  0x39,R30
+                 ; 0000 0226 		// TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
                  ; 0000 0227 
                  ; 0000 0228 		// Enter sleep mode
                  ; 0000 0229 		sleep_enter();
-0002ad 9588      	sleep
+0002aa 9588      	sleep
                  ; 0000 022A 
                  ; 0000 022B 		// Re-enable Timer1 overflow interrupt after waking up
-                 ; 0000 022C 		TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
-0002ae b7e9      	IN   R30,0x39
-0002af 60e4      	ORI  R30,4
-0002b0 bfe9      	OUT  0x39,R30
+                 ; 0000 022C 		// TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
                  ; 0000 022D 	}
-0002b1 cf47      	RJMP _0x24
+0002ab cf4d      	RJMP _0x24
                  ; 0000 022E }
                  _0x4D:
-0002b2 cfff      	RJMP _0x4D
+0002ac cfff      	RJMP _0x4D
                  ; .FEND
                  
                  	.CSEG
@@ -2414,10 +2408,10 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  	.CSEG
                  _sleep_enable:
                  ; .FSTART _sleep_enable
-0002b3 b7e5         in   r30,power_ctrl_reg
-0002b4 68e0         sbr  r30,__se_bit
-0002b5 bfe5         out  power_ctrl_reg,r30
-0002b6 9508      	RET
+0002ad b7e5         in   r30,power_ctrl_reg
+0002ae 68e0         sbr  r30,__se_bit
+0002af bfe5         out  power_ctrl_reg,r30
+0002b0 9508      	RET
                  ; .FEND
                  
                  	.DSEG
@@ -2449,161 +2443,161 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  	.CSEG
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0x0:
-0002b7 91a0 0260 	LDS  R26,_dial
-0002b9 940e 004a 	CALL _LED_segment
-0002bb bbeb      	OUT  0x1B,R30
-0002bc 9ac0      	SBI  0x18,0
-0002bd 9508      	RET
+0002b1 91a0 0260 	LDS  R26,_dial
+0002b3 940e 004a 	CALL _LED_segment
+0002b5 bbeb      	OUT  0x1B,R30
+0002b6 9ac0      	SBI  0x18,0
+0002b7 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0x1:
                 +
-0002be 91a0 0261+LDS R26 , _dial + ( 1 )
+0002b8 91a0 0261+LDS R26 , _dial + ( 1 )
                  	__GETB2MN _dial,1
-0002c0 940e 004a 	CALL _LED_segment
-0002c2 bbeb      	OUT  0x1B,R30
-0002c3 9ac1      	SBI  0x18,1
-0002c4 9508      	RET
+0002ba 940e 004a 	CALL _LED_segment
+0002bc bbeb      	OUT  0x1B,R30
+0002bd 9ac1      	SBI  0x18,1
+0002be 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:8 WORDS
                  SUBOPT_0x2:
-0002c5 920a      	ST   -Y,R0
-0002c6 921a      	ST   -Y,R1
-0002c7 92fa      	ST   -Y,R15
-0002c8 936a      	ST   -Y,R22
-0002c9 937a      	ST   -Y,R23
-0002ca 938a      	ST   -Y,R24
-0002cb 939a      	ST   -Y,R25
-0002cc 93aa      	ST   -Y,R26
-0002cd 93ba      	ST   -Y,R27
-0002ce 93ea      	ST   -Y,R30
-0002cf 93fa      	ST   -Y,R31
-0002d0 b7ef      	IN   R30,SREG
-0002d1 93ea      	ST   -Y,R30
-0002d2 9508      	RET
+0002bf 920a      	ST   -Y,R0
+0002c0 921a      	ST   -Y,R1
+0002c1 92fa      	ST   -Y,R15
+0002c2 936a      	ST   -Y,R22
+0002c3 937a      	ST   -Y,R23
+0002c4 938a      	ST   -Y,R24
+0002c5 939a      	ST   -Y,R25
+0002c6 93aa      	ST   -Y,R26
+0002c7 93ba      	ST   -Y,R27
+0002c8 93ea      	ST   -Y,R30
+0002c9 93fa      	ST   -Y,R31
+0002ca b7ef      	IN   R30,SREG
+0002cb 93ea      	ST   -Y,R30
+0002cc 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:5 WORDS
                  SUBOPT_0x3:
-0002d3 91e0 0260 	LDS  R30,_dial
-0002d5 91f0 0261 	LDS  R31,_dial+1
-0002d7 9508      	RET
+0002cd 91e0 0260 	LDS  R30,_dial
+0002cf 91f0 0261 	LDS  R31,_dial+1
+0002d1 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0x4:
-0002d8 91e0 026c 	LDS  R30,_candidate_S0000005000
-0002da 91f0 026d 	LDS  R31,_candidate_S0000005000+1
-0002dc 9508      	RET
+0002d2 91e0 026c 	LDS  R30,_candidate_S0000005000
+0002d4 91f0 026d 	LDS  R31,_candidate_S0000005000+1
+0002d6 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:13 WORDS
                  SUBOPT_0x5:
-0002dd 91a0 0260 	LDS  R26,_dial
-0002df 91b0 0261 	LDS  R27,_dial+1
-0002e1 17ea      	CP   R30,R26
-0002e2 07fb      	CPC  R31,R27
-0002e3 9508      	RET
+0002d7 91a0 0260 	LDS  R26,_dial
+0002d9 91b0 0261 	LDS  R27,_dial+1
+0002db 17ea      	CP   R30,R26
+0002dc 07fb      	CPC  R31,R27
+0002dd 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0x6:
                 +
-0002e4 91e0 026e+LDS R30 , _candidate_S0000005000 + ( 2 )
-0002e6 91f0 026f+LDS R31 , _candidate_S0000005000 + ( 2 ) + 1
+0002de 91e0 026e+LDS R30 , _candidate_S0000005000 + ( 2 )
+0002e0 91f0 026f+LDS R31 , _candidate_S0000005000 + ( 2 ) + 1
                  	__GETW1MN _candidate_S0000005000,2
-0002e8 9508      	RET
+0002e2 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
                  SUBOPT_0x7:
-0002e9 2de5      	MOV  R30,R5
-0002ea e0a0      	LDI  R26,LOW(_eeprom_locked)
-0002eb e0b0      	LDI  R27,HIGH(_eeprom_locked)
-0002ec 940e 0315 	CALL __EEPROMWRB
-0002ee 9508      	RET
+0002e3 2de5      	MOV  R30,R5
+0002e4 e0a0      	LDI  R26,LOW(_eeprom_locked)
+0002e5 e0b0      	LDI  R27,HIGH(_eeprom_locked)
+0002e6 940e 030f 	CALL __EEPROMWRB
+0002e8 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:3 WORDS
                  SUBOPT_0x8:
-0002ef e0aa      	LDI  R26,LOW(10)
-0002f0 e0b0      	LDI  R27,0
-0002f1 940c 02f3 	JMP  _delay_ms
+0002e9 e0aa      	LDI  R26,LOW(10)
+0002ea e0b0      	LDI  R27,0
+0002eb 940c 02ed 	JMP  _delay_ms
                  
                  
                  	.CSEG
                  _delay_ms:
-0002f3 9610      	adiw r26,0
-0002f4 f039      	breq __delay_ms1
+0002ed 9610      	adiw r26,0
+0002ee f039      	breq __delay_ms1
                  __delay_ms0:
-0002f5 95a8      	wdr
+0002ef 95a8      	wdr
                 +
-0002f6 ec8d     +LDI R24 , LOW ( 0xACD )
-0002f7 e09a     +LDI R25 , HIGH ( 0xACD )
+0002f0 ec8d     +LDI R24 , LOW ( 0xACD )
+0002f1 e09a     +LDI R25 , HIGH ( 0xACD )
                 +__DELAY_USW_LOOP :
-0002f8 9701     +SBIW R24 , 1
-0002f9 f7f1     +BRNE __DELAY_USW_LOOP
+0002f2 9701     +SBIW R24 , 1
+0002f3 f7f1     +BRNE __DELAY_USW_LOOP
                  	__DELAY_USW 0xACD
-0002fa 9711      	sbiw r26,1
-0002fb f7c9      	brne __delay_ms0
+0002f4 9711      	sbiw r26,1
+0002f5 f7c9      	brne __delay_ms0
                  __delay_ms1:
-0002fc 9508      	ret
+0002f6 9508      	ret
                  
                  __EEPROMRDW:
-0002fd 9611      	ADIW R26,1
-0002fe d002      	RCALL __EEPROMRDB
-0002ff 2ffe      	MOV  R31,R30
-000300 9711      	SBIW R26,1
+0002f7 9611      	ADIW R26,1
+0002f8 d002      	RCALL __EEPROMRDB
+0002f9 2ffe      	MOV  R31,R30
+0002fa 9711      	SBIW R26,1
                  
                  __EEPROMRDB:
-000301 99e1      	SBIC EECR,EEWE
-000302 cffe      	RJMP __EEPROMRDB
-000303 93ff      	PUSH R31
-000304 b7ff      	IN   R31,SREG
-000305 94f8      	CLI
-000306 bbae      	OUT  EEARL,R26
-000307 bbbf      	OUT  EEARH,R27
-000308 9ae0      	SBI  EECR,EERE
-000309 b3ed      	IN   R30,EEDR
-00030a bfff      	OUT  SREG,R31
-00030b 91ff      	POP  R31
-00030c 9508      	RET
+0002fb 99e1      	SBIC EECR,EEWE
+0002fc cffe      	RJMP __EEPROMRDB
+0002fd 93ff      	PUSH R31
+0002fe b7ff      	IN   R31,SREG
+0002ff 94f8      	CLI
+000300 bbae      	OUT  EEARL,R26
+000301 bbbf      	OUT  EEARH,R27
+000302 9ae0      	SBI  EECR,EERE
+000303 b3ed      	IN   R30,EEDR
+000304 bfff      	OUT  SREG,R31
+000305 91ff      	POP  R31
+000306 9508      	RET
                  
                  __EEPROMWRW:
-00030d d007      	RCALL __EEPROMWRB
-00030e 9611      	ADIW R26,1
-00030f 93ef      	PUSH R30
-000310 2fef      	MOV  R30,R31
-000311 d003      	RCALL __EEPROMWRB
-000312 91ef      	POP  R30
-000313 9711      	SBIW R26,1
-000314 9508      	RET
+000307 d007      	RCALL __EEPROMWRB
+000308 9611      	ADIW R26,1
+000309 93ef      	PUSH R30
+00030a 2fef      	MOV  R30,R31
+00030b d003      	RCALL __EEPROMWRB
+00030c 91ef      	POP  R30
+00030d 9711      	SBIW R26,1
+00030e 9508      	RET
                  
                  __EEPROMWRB:
-000315 9be1      	SBIS EECR,EEWE
-000316 c002      	RJMP __EEPROMWRB1
-000317 95a8      	WDR
-000318 cffc      	RJMP __EEPROMWRB
+00030f 9be1      	SBIS EECR,EEWE
+000310 c002      	RJMP __EEPROMWRB1
+000311 95a8      	WDR
+000312 cffc      	RJMP __EEPROMWRB
                  __EEPROMWRB1:
-000319 b79f      	IN   R25,SREG
-00031a 94f8      	CLI
-00031b bbae      	OUT  EEARL,R26
-00031c bbbf      	OUT  EEARH,R27
-00031d 9ae0      	SBI  EECR,EERE
-00031e b38d      	IN   R24,EEDR
-00031f 17e8      	CP   R30,R24
-000320 f019      	BREQ __EEPROMWRB0
-000321 bbed      	OUT  EEDR,R30
-000322 9ae2      	SBI  EECR,EEMWE
-000323 9ae1      	SBI  EECR,EEWE
+000313 b79f      	IN   R25,SREG
+000314 94f8      	CLI
+000315 bbae      	OUT  EEARL,R26
+000316 bbbf      	OUT  EEARH,R27
+000317 9ae0      	SBI  EECR,EERE
+000318 b38d      	IN   R24,EEDR
+000319 17e8      	CP   R30,R24
+00031a f019      	BREQ __EEPROMWRB0
+00031b bbed      	OUT  EEDR,R30
+00031c 9ae2      	SBI  EECR,EEMWE
+00031d 9ae1      	SBI  EECR,EEWE
                  __EEPROMWRB0:
-000324 bf9f      	OUT  SREG,R25
-000325 9508      	RET
+00031e bf9f      	OUT  SREG,R25
+00031f 9508      	RET
                  
                  __INITLOCB:
                  __INITLOCW:
-000326 0fac      	ADD  R26,R28
-000327 1fbd      	ADC  R27,R29
+000320 0fac      	ADD  R26,R28
+000321 1fbd      	ADC  R27,R29
                  __INITLOC0:
-000328 9005      	LPM  R0,Z+
-000329 920d      	ST   X+,R0
-00032a 958a      	DEC  R24
-00032b f7e1      	BRNE __INITLOC0
-00032c 9508      	RET
+000322 9005      	LPM  R0,Z+
+000323 920d      	ST   X+,R0
+000324 958a      	DEC  R24
+000325 f7e1      	BRNE __INITLOC0
+000326 9508      	RET
                  
                  ;END OF CODE MARKER
                  __END_OF_CODE:
@@ -2627,13 +2621,13 @@ ATmega32A register use summary:
 r0 :   8 r1 :   2 r2 :   0 r3 :   0 r4 :   0 r5 :   8 r6 :   7 r7 :   3 
 r8 :   6 r9 :   2 r10:   0 r11:   0 r12:   0 r13:   0 r14:   0 r15:   2 
 r16:   0 r17:   6 r18:   0 r19:   0 r20:   0 r21:   0 r22:   2 r23:   2 
-r24:  12 r25:   6 r26:  99 r27:  23 r28:   6 r29:   2 r30: 229 r31:  56 
+r24:  12 r25:   6 r26:  99 r27:  23 r28:   6 r29:   2 r30: 223 r31:  56 
 x  :   4 y  :  38 z  :   1 
 Registers used: 22 out of 35 (62.9%)
 
 ATmega32A instruction use summary:
 .lds  :   0 .lds.l:   0 .sts  :   0 .sts.l:   0 adc   :   2 add   :   2 
-adiw  :   5 and   :   0 andi  :   1 asr   :   0 bclr  :   0 bld   :   0 
+adiw  :   5 and   :   0 andi  :   0 asr   :   0 bclr  :   0 bld   :   0 
 brbc  :   0 brbs  :   0 brcc  :   0 brcs  :   0 break :   0 breq  :   8 
 brge  :   8 brhc  :   0 brhs  :   0 brid  :   0 brie  :   0 brlo  :   0 
 brlt  :  12 brmi  :   0 brne  :  27 brpl  :   0 brsh  :   0 brtc  :   0 
@@ -2642,22 +2636,22 @@ cbi   :   6 cbr   :   0 clc   :   0 clh   :   0 cli   :   4 cln   :   0
 clr   :   6 cls   :   0 clt   :   0 clv   :   0 clz   :   0 com   :   1 
 cp    :   5 cpc   :  11 cpi   :  33 cpse  :   0 dec   :   2 des   :   0 
 eor   :   1 fmul  :   0 fmuls :   0 fmulsu:   0 icall :   0 ijmp  :   0 
-in    :  14 inc   :   0 jmp   :  23 ld    :  17 ldd   :   1 ldi   : 121 
+in    :  12 inc   :   0 jmp   :  23 ld    :  17 ldd   :   1 ldi   : 121 
 lds   :  49 lpm   :   1 lsl   :   0 lsr   :   0 mov   :   9 movw  :   9 
 mul   :   0 muls  :   0 mulsu :   0 neg   :   0 nop   :   0 or    :   2 
-ori   :   5 out   :  46 pop   :   2 push  :   2 rcall :   8 ret   :  16 
+ori   :   4 out   :  44 pop   :   2 push  :   2 rcall :   8 ret   :  16 
 reti  :   2 rjmp  :  28 rol   :   0 ror   :   0 sbc   :   0 sbci  :   0 
 sbi   :   8 sbic  :   1 sbis  :   1 sbiw  :  10 sbr   :   1 sbrc  :   0 
 sbrs  :   0 sec   :   0 seh   :   0 sei   :   3 sen   :   0 ser   :   0 
 ses   :   0 set   :   0 sev   :   0 sez   :   0 sleep :   1 spm   :   0 
 st    :  24 std   :   0 sts   :  49 sub   :   0 subi  :   8 swap  :   0 
 tst   :   1 wdr   :   2 
-Instructions used: 48 out of 116 (41.4%)
+Instructions used: 47 out of 116 (40.5%)
 
 ATmega32A memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x00065a   1614     12   1626   32768   5.0%
+[.cseg] 0x000000 0x00064e   1602     12   1614   32768   4.9%
 [.dseg] 0x000060 0x000273      0     19     19    2048   0.9%
 [.eseg] 0x000000 0x000009      0      9      9    1024   0.9%
 

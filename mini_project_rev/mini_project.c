@@ -547,12 +547,12 @@ void main(void)
 		prev_dial.value = dial.value; // Initialize prev_dial with the initial dial position
 
 		// Disable Timer1 overflow interrupt before entering sleep mode
-		TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
+		// TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
 
 		// Enter sleep mode
 		sleep_enter();
 
 		// Re-enable Timer1 overflow interrupt after waking up
-		TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
+		// TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
 	}
 }

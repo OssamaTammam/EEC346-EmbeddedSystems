@@ -32,5 +32,5 @@ ext_int0_isr                                                                    
 ext_int1_isr                                                                      0x0007F     15
 ext_int2_isr                                                                      0x0008E    101
 timer1_ovf_isr                                                                    0x000F3     70
-main                                                                              0x00139    378
-sleep_enable                                                                      0x002B3      4
+main                                                                              0x00139    372
+sleep_enable                                                                      0x002AD      4

@@ -8,7 +8,7 @@ http://www.hpinfotech.com
 Project : mini_project
 Version :
 Date    : 24-Apr-2024
-Author  :
+Author  : Ossama
 Company :
 Comments:
 
@@ -141,18 +141,20 @@ SEGMENT LED_segment(unsigned char value)
 
 void LED_blink(unsigned char n)
 {
-    cli(); // Disable interrupts
+	cli(); // Disable interrupts
 	while (n--)
-	{                  
-        PORTA = 0b11111111;         // all segments off     
-        delay_ms(BLINKING_DELAY_MS);
-        PORTA = LED_segment(dial.tens);     
-        sbi(PORTB, PORTB0); // turn on left digit (tens) 
-        PORTA = LED_segment(dial.units);
-        sbi(PORTB, PORTB1); // turn on left digit (tens)  
-        delay_ms(BLINKING_DELAY_MS);
-	}        
-    sei(); // Enable interrupts
+	{
+		PORTA = LED_segment(dial.tens); // Display tens digit
+		sbi(PORTB, PORTB0);				// Turn on left digit (tens)
+		delay_ms(BLINKING_DELAY_MS);
+		cbi(PORTB, PORTB0); // Turn off left digit (tens)
+
+		PORTA = LED_segment(dial.units); // Display units digit
+		sbi(PORTB, PORTB1);				 // Turn on right digit (units)
+		delay_ms(BLINKING_DELAY_MS);
+		cbi(PORTB, PORTB1); // Turn off right digit (units)
+	}
+	sei(); // Enable interrupts
 }
 
 typedef enum
@@ -187,7 +189,9 @@ interrupt[EXT_INT2] void ext_int2_isr(void)
 	static DIAL candidate[3]; // holder for candidate combination
 
 	// combination programming logic
-
+                 
+    delay_ms(DEBOUNCE_DELAY_MS); 
+    
 	switch (prog_state)
 	{
 
@@ -225,8 +229,11 @@ interrupt[EXT_INT2] void ext_int2_isr(void)
 
 	default: // ??? unknown/unexpected state
 		break;
-	}
-}
+	}        
+    
+    delay_ms(DEBOUNCE_DELAY_MS);
+
+    }
 
 typedef enum
 {
@@ -248,7 +255,7 @@ interrupt[TIM1_OVF] void timer1_ovf_isr(void)
 	{
 		cbi(PORTB, PORTB0); // turn off left digit (tens)
 		cbi(PORTB, PORTB1); // turn off right digit (units)
-
+              
 		screensaver_timeout--; // decrement screensaver timeout value
 		if (screensaver_timeout == 0)
 		{
@@ -260,11 +267,10 @@ interrupt[TIM1_OVF] void timer1_ovf_isr(void)
 			prog_state = PROG_0;			 // cancel any pending combination programming attempts
 
 			return; // early exit from interrupt handler, leaving display blank; nothing left to do
-		}
+		}     
+        
 
 		digit ^= 0x01; // toggle between left & right digits
-
-		delay_ms(DEBOUNCE_DELAY_MS);
 
 		if (digit == DIGIT_LEFT)
 		{
@@ -280,7 +286,8 @@ interrupt[TIM1_OVF] void timer1_ovf_isr(void)
 		}
 	}
 
-	TIFR |= (1 << TOV1); // Clear Timer1 overflow interrupt flag
+	TIFR |= (1 << TOV1); // Clear Timer1 overflow interrupt flag          
+    
 }
 
 void main(void)
@@ -543,14 +550,16 @@ void main(void)
 
 		motion_direction = 0xFF;
 		prev_dial.value = dial.value; // Initialize prev_dial with the initial dial position
-
+                                 
+        delay_ms(DEBOUNCE_DELAY_MS);
+        
 		// Disable Timer1 overflow interrupt before entering sleep mode
-		TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
+		// TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
 
 		// Enter sleep mode
 		sleep_enter();
 
 		// Re-enable Timer1 overflow interrupt after waking up
-		TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
+		// TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
 	}
 }

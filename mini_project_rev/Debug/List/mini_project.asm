@@ -1180,7 +1180,7 @@ __CLEAR_SRAM:
 ;Project : mini_project
 ;Version :
 ;Date    : 24-Apr-2024
-;Author  :
+;Author  : Ossama
 ;Company :
 ;Comments:
 ;
@@ -1351,7 +1351,7 @@ _LED_segment:
 ; 0000 008F {
 _LED_blink:
 ; .FSTART _LED_blink
-; 0000 0090     cli(); // Disable interrupts
+; 0000 0090 	cli(); // Disable interrupts
 	ST   -Y,R26
 ;	n -> Y+0
 	cli
@@ -1363,29 +1363,29 @@ _0x5:
 	SUBI R30,-LOW(1)
 	BREQ _0x7
 ; 0000 0092 	{
-; 0000 0093         PORTA = LED_segment(dial.tens); // Display tens digit
+; 0000 0093 		PORTA = LED_segment(dial.tens); // Display tens digit
 	CALL SUBOPT_0x0
-; 0000 0094         sbi(PORTB, PORTB0); // Turn on left digit (tens)
-; 0000 0095         delay_ms(BLINKING_DELAY_MS);
+; 0000 0094 		sbi(PORTB, PORTB0);				// Turn on left digit (tens)
+; 0000 0095 		delay_ms(BLINKING_DELAY_MS);
 	LDI  R26,LOW(100)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 0096         cbi(PORTB, PORTB0); // Turn off left digit (tens)
+; 0000 0096 		cbi(PORTB, PORTB0); // Turn off left digit (tens)
 	CBI  0x18,0
 ; 0000 0097 
-; 0000 0098         PORTA = LED_segment(dial.units); // Display units digit
+; 0000 0098 		PORTA = LED_segment(dial.units); // Display units digit
 	CALL SUBOPT_0x1
-; 0000 0099         sbi(PORTB, PORTB1); // Turn on right digit (units)
-; 0000 009A         delay_ms(BLINKING_DELAY_MS);
+; 0000 0099 		sbi(PORTB, PORTB1);				 // Turn on right digit (units)
+; 0000 009A 		delay_ms(BLINKING_DELAY_MS);
 	LDI  R26,LOW(100)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 009B         cbi(PORTB, PORTB1); // Turn off right digit (units)
+; 0000 009B 		cbi(PORTB, PORTB1); // Turn off right digit (units)
 	CBI  0x18,1
 ; 0000 009C 	}
 	RJMP _0x5
 _0x7:
-; 0000 009D     sei(); // Enable interrupts
+; 0000 009D 	sei(); // Enable interrupts
 	sei
 ; 0000 009E }
 	ADIW R28,1
@@ -2279,20 +2279,14 @@ _0x3E:
 	STS  _prev_dial+1,R31
 ; 0000 0224 
 ; 0000 0225 		// Disable Timer1 overflow interrupt before entering sleep mode
-; 0000 0226 		TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
-	IN   R30,0x39
-	ANDI R30,0xFB
-	OUT  0x39,R30
+; 0000 0226 		// TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
 ; 0000 0227 
 ; 0000 0228 		// Enter sleep mode
 ; 0000 0229 		sleep_enter();
 	sleep
 ; 0000 022A 
 ; 0000 022B 		// Re-enable Timer1 overflow interrupt after waking up
-; 0000 022C 		TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
-	IN   R30,0x39
-	ORI  R30,4
-	OUT  0x39,R30
+; 0000 022C 		// TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
 ; 0000 022D 	}
 	RJMP _0x24
 ; 0000 022E }
