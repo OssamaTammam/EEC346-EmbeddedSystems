@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.1.30  D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_project.asm Thu May 09 17:55:04 2024
+AVRASM ver. 2.1.30  D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_project.asm Thu May 09 18:50:35 2024
 
 D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_project.asm(1087): warning: Register r5 already defined by the .DEF directive
 D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_project.asm(1088): warning: Register r6 already defined by the .DEF directive
@@ -1107,15 +1107,15 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  
                  ;INTERRUPT VECTORS
 000000 940c 0030 	JMP  __RESET
-000002 940c 0074 	JMP  _ext_int0_isr
-000004 940c 007e 	JMP  _ext_int1_isr
-000006 940c 008d 	JMP  _ext_int2_isr
+000002 940c 0075 	JMP  _ext_int0_isr
+000004 940c 007f 	JMP  _ext_int1_isr
+000006 940c 008e 	JMP  _ext_int2_isr
 000008 940c 0000 	JMP  0x00
 00000a 940c 0000 	JMP  0x00
 00000c 940c 0000 	JMP  0x00
 00000e 940c 0000 	JMP  0x00
 000010 940c 0000 	JMP  0x00
-000012 940c 00f2 	JMP  _timer1_ovf_isr
+000012 940c 00f3 	JMP  _timer1_ovf_isr
 000014 940c 0000 	JMP  0x00
 000016 940c 0000 	JMP  0x00
 000018 940c 0000 	JMP  0x00
@@ -1174,7 +1174,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 000046 e6c0      	LDI  R28,LOW(__SRAM_START+__DSTACK_SIZE)
 000047 e0d2      	LDI  R29,HIGH(__SRAM_START+__DSTACK_SIZE)
                  
-000048 940c 013e 	JMP  _main
+000048 940c 0139 	JMP  _main
                  
                  	.ESEG
                  	.ORG 0
@@ -1233,7 +1233,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ;
                  ;#define bit_is_clear(sfr, bit) (!(sfr & (1 << bit)))
                  ;
-                 ;#define DEBOUNCE_DELAY_MS 20
+                 ;#define DEBOUNCE_DELAY_MS 10
                  ;#define BLINKING_DELAY_MS 100
                  ;
                  ;typedef union
@@ -1277,7 +1277,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ;
                  ;volatile PROG_STATE prog_state = PROG_0; // combination programming state machine variable
                  ;
-                 ;#define SCREENSAVER_TIMEOUT_VALUE 2000 // display blank timeout value in 1/250 second increments (2,000 ~= 8 seconds)
+                 ;#define SCREENSAVER_TIMEOUT_VALUE 500 // display blank timeout value in 1/250 second increments (2,000 ~= 8 seconds)
                  ;unsigned int screensaver_timeout;
                  ;
                  ;// EEPROM memory map
@@ -1343,7 +1343,7 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 00004e e0b0      	LDI  R27,HIGH(0)
 00004f e5e4      	LDI  R30,LOW(_0x4*2)
 000050 e0f0      	LDI  R31,HIGH(_0x4*2)
-000051 940e 0312 	CALL __INITLOCB
+000051 940e 0326 	CALL __INITLOCB
                  ;	value -> Y+12
                  ;	LED_segment_lookup_table -> Y+0
 000053 85ec      	LDD  R30,Y+12
@@ -1364,43 +1364,45 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ; 0000 008F {
                  _LED_blink:
                  ; .FSTART _LED_blink
-                 ; 0000 0090 
-                 ; 0000 0091 	while (n--)
+                 ; 0000 0090     cli(); // Disable interrupts
 00005c 93aa      	ST   -Y,R26
                  ;	n -> Y+0
+00005d 94f8      	cli
+                 ; 0000 0091 	while (n--)
                  _0x5:
-00005d 81e8      	LD   R30,Y
-00005e 50e1      	SUBI R30,LOW(1)
-00005f 83e8      	ST   Y,R30
-000060 5fef      	SUBI R30,-LOW(1)
-000061 f081      	BREQ _0x7
+00005e 81e8      	LD   R30,Y
+00005f 50e1      	SUBI R30,LOW(1)
+000060 83e8      	ST   Y,R30
+000061 5fef      	SUBI R30,-LOW(1)
+000062 f079      	BREQ _0x7
                  ; 0000 0092 	{
-                 ; 0000 0093 
-                 ; 0000 0094 		cli();						 // disable interrupts (prevents display multiplexing)
-000062 94f8      	cli
-                 ; 0000 0095 		PORTA = 0b11111111;			 // all segments off
-000063 efef      	LDI  R30,LOW(255)
-000064 bbeb      	OUT  0x1B,R30
-                 ; 0000 0096 		delay_ms(BLINKING_DELAY_MS); // ~1 second delay, with display off
+                 ; 0000 0093         PORTA = LED_segment(dial.tens); // Display tens digit
+000063 940e 02b7 	CALL SUBOPT_0x0
+                 ; 0000 0094         sbi(PORTB, PORTB0); // Turn on left digit (tens)
+                 ; 0000 0095         delay_ms(BLINKING_DELAY_MS);
 000065 e6a4      	LDI  R26,LOW(100)
 000066 e0b0      	LDI  R27,0
-000067 940e 02df 	CALL _delay_ms
-                 ; 0000 0097 		GIFR |= (1 << INTF2);		 // Clear INT2 flag
-000069 b7ea      	IN   R30,0x3A
-00006a 62e0      	ORI  R30,0x20
-00006b bfea      	OUT  0x3A,R30
-                 ; 0000 0098 		sei();						 // re-enable interrupts
-00006c 9478      	sei
-                 ; 0000 0099 		delay_ms(BLINKING_DELAY_MS); // ~1 second delay, with display on
-00006d e6a4      	LDI  R26,LOW(100)
-00006e e0b0      	LDI  R27,0
-00006f 940e 02df 	CALL _delay_ms
-                 ; 0000 009A 	}
-000071 cfeb      	RJMP _0x5
+000067 940e 02f3 	CALL _delay_ms
+                 ; 0000 0096         cbi(PORTB, PORTB0); // Turn off left digit (tens)
+000069 98c0      	CBI  0x18,0
+                 ; 0000 0097 
+                 ; 0000 0098         PORTA = LED_segment(dial.units); // Display units digit
+00006a 940e 02be 	CALL SUBOPT_0x1
+                 ; 0000 0099         sbi(PORTB, PORTB1); // Turn on right digit (units)
+                 ; 0000 009A         delay_ms(BLINKING_DELAY_MS);
+00006c e6a4      	LDI  R26,LOW(100)
+00006d e0b0      	LDI  R27,0
+00006e 940e 02f3 	CALL _delay_ms
+                 ; 0000 009B         cbi(PORTB, PORTB1); // Turn off right digit (units)
+000070 98c1      	CBI  0x18,1
+                 ; 0000 009C 	}
+000071 cfec      	RJMP _0x5
                  _0x7:
-                 ; 0000 009B }
-000072 9621      	ADIW R28,1
-000073 9508      	RET
+                 ; 0000 009D     sei(); // Enable interrupts
+000072 9478      	sei
+                 ; 0000 009E }
+000073 9621      	ADIW R28,1
+000074 9508      	RET
                  ; .FEND
                  ;
                  ;typedef enum
@@ -1414,189 +1416,189 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ;
                  ;// External Interrupt 0 service routine
                  ;interrupt[EXT_INT0] void ext_int0_isr(void)
-                 ; 0000 00A8 {
+                 ; 0000 00AB {
                  _ext_int0_isr:
                  ; .FSTART _ext_int0_isr
-000074 93ea      	ST   -Y,R30
-000075 93fa      	ST   -Y,R31
-000076 b7ef      	IN   R30,SREG
-000077 93ea      	ST   -Y,R30
-                 ; 0000 00A9 	// Place your code here
-                 ; 0000 00AA 	motion_direction = 0x55;
-000078 e5e5      	LDI  R30,LOW(85)
-000079 e0f0      	LDI  R31,HIGH(85)
-00007a 014f      	MOVW R8,R30
-                 ; 0000 00AB 	GIFR |= (1 << INTF0); // Clear INT2 flag
-00007b b7ea      	IN   R30,0x3A
-00007c 64e0      	ORI  R30,0x40
-00007d c009      	RJMP _0x54
-                 ; 0000 00AC }
+000075 93ea      	ST   -Y,R30
+000076 93fa      	ST   -Y,R31
+000077 b7ef      	IN   R30,SREG
+000078 93ea      	ST   -Y,R30
+                 ; 0000 00AC 	// Place your code here
+                 ; 0000 00AD 	motion_direction = 0x55;
+000079 e5e5      	LDI  R30,LOW(85)
+00007a e0f0      	LDI  R31,HIGH(85)
+00007b 014f      	MOVW R8,R30
+                 ; 0000 00AE 	GIFR |= (1 << INTF0); // Clear INT2 flag
+00007c b7ea      	IN   R30,0x3A
+00007d 64e0      	ORI  R30,0x40
+00007e c009      	RJMP _0x54
+                 ; 0000 00AF }
                  ; .FEND
                  ;
                  ;// External Interrupt 1 service routine
                  ;interrupt[EXT_INT1] void ext_int1_isr(void)
-                 ; 0000 00B0 {
+                 ; 0000 00B3 {
                  _ext_int1_isr:
                  ; .FSTART _ext_int1_isr
-00007e 93ea      	ST   -Y,R30
-00007f 93fa      	ST   -Y,R31
-000080 b7ef      	IN   R30,SREG
-000081 93ea      	ST   -Y,R30
-                 ; 0000 00B1 	// Place your code here
-                 ; 0000 00B2 	motion_direction = 0xAA;
-000082 eaea      	LDI  R30,LOW(170)
-000083 e0f0      	LDI  R31,HIGH(170)
-000084 014f      	MOVW R8,R30
-                 ; 0000 00B3 	GIFR |= (1 << INTF1); // Clear INT2 flag
-000085 b7ea      	IN   R30,0x3A
-000086 68e0      	ORI  R30,0x80
+00007f 93ea      	ST   -Y,R30
+000080 93fa      	ST   -Y,R31
+000081 b7ef      	IN   R30,SREG
+000082 93ea      	ST   -Y,R30
+                 ; 0000 00B4 	// Place your code here
+                 ; 0000 00B5 	motion_direction = 0xAA;
+000083 eaea      	LDI  R30,LOW(170)
+000084 e0f0      	LDI  R31,HIGH(170)
+000085 014f      	MOVW R8,R30
+                 ; 0000 00B6 	GIFR |= (1 << INTF1); // Clear INT2 flag
+000086 b7ea      	IN   R30,0x3A
+000087 68e0      	ORI  R30,0x80
                  _0x54:
-000087 bfea      	OUT  0x3A,R30
-                 ; 0000 00B4 }
-000088 91e9      	LD   R30,Y+
-000089 bfef      	OUT  SREG,R30
-00008a 91f9      	LD   R31,Y+
-00008b 91e9      	LD   R30,Y+
-00008c 9518      	RETI
+000088 bfea      	OUT  0x3A,R30
+                 ; 0000 00B7 }
+000089 91e9      	LD   R30,Y+
+00008a bfef      	OUT  SREG,R30
+00008b 91f9      	LD   R31,Y+
+00008c 91e9      	LD   R30,Y+
+00008d 9518      	RETI
                  ; .FEND
                  ;
                  ;// External Interrupt 2 service routine
                  ;interrupt[EXT_INT2] void ext_int2_isr(void)
-                 ; 0000 00B8 {
+                 ; 0000 00BB {
                  _ext_int2_isr:
                  ; .FSTART _ext_int2_isr
-00008d 940e 02b1 	CALL SUBOPT_0x0
-                 ; 0000 00B9 	// Place your code here
-                 ; 0000 00BA 	static DIAL candidate[3]; // holder for candidate combination
-                 ; 0000 00BB 
-                 ; 0000 00BC 	// combination programming logic
-                 ; 0000 00BD 
-                 ; 0000 00BE 	switch (prog_state)
-00008f 91e0 026b 	LDS  R30,_prog_state
-000091 e0f0      	LDI  R31,0
-                 ; 0000 00BF 	{
+00008e 940e 02c5 	CALL SUBOPT_0x2
+                 ; 0000 00BC 	// Place your code here
+                 ; 0000 00BD 	static DIAL candidate[3]; // holder for candidate combination
+                 ; 0000 00BE 
+                 ; 0000 00BF 	// combination programming logic
                  ; 0000 00C0 
-                 ; 0000 00C1 	case PROG_0:						 // begin combination programming sequence
-000092 9730      	SBIW R30,0
-000093 f461      	BRNE _0xB
-                 ; 0000 00C2 		candidate[0].value = dial.value; // save current dial position
-000094 940e 02bf 	CALL SUBOPT_0x1
-000096 93e0 026c 	STS  _candidate_S0000005000,R30
-000098 93f0 026d 	STS  _candidate_S0000005000+1,R31
-                 ; 0000 00C3 		LED_blink(1);					 // blink display once to acknowledge 1st number saved
-00009a e0a1      	LDI  R26,LOW(1)
-00009b dfc0      	RCALL _LED_blink
-                 ; 0000 00C4 		prog_state = PROG_1;			 // advance to next state
-00009c e0e1      	LDI  R30,LOW(1)
-00009d 93e0 026b 	STS  _prog_state,R30
-                 ; 0000 00C5 		break;
-00009f c051      	RJMP _0xA
-                 ; 0000 00C6 
-                 ; 0000 00C7 	case PROG_1: // entering 2nd number
+                 ; 0000 00C1 	switch (prog_state)
+000090 91e0 026b 	LDS  R30,_prog_state
+000092 e0f0      	LDI  R31,0
+                 ; 0000 00C2 	{
+                 ; 0000 00C3 
+                 ; 0000 00C4 	case PROG_0:						 // begin combination programming sequence
+000093 9730      	SBIW R30,0
+000094 f461      	BRNE _0xB
+                 ; 0000 00C5 		candidate[0].value = dial.value; // save current dial position
+000095 940e 02d3 	CALL SUBOPT_0x3
+000097 93e0 026c 	STS  _candidate_S0000005000,R30
+000099 93f0 026d 	STS  _candidate_S0000005000+1,R31
+                 ; 0000 00C6 		LED_blink(1);					 // blink display once to acknowledge 1st number saved
+00009b e0a1      	LDI  R26,LOW(1)
+00009c dfbf      	RCALL _LED_blink
+                 ; 0000 00C7 		prog_state = PROG_1;			 // advance to next state
+00009d e0e1      	LDI  R30,LOW(1)
+00009e 93e0 026b 	STS  _prog_state,R30
+                 ; 0000 00C8 		break;
+0000a0 c051      	RJMP _0xA
+                 ; 0000 00C9 
+                 ; 0000 00CA 	case PROG_1: // entering 2nd number
                  _0xB:
-0000a0 30e1      	CPI  R30,LOW(0x1)
-0000a1 e0a0      	LDI  R26,HIGH(0x1)
-0000a2 07fa      	CPC  R31,R26
-0000a3 f489      	BRNE _0xC
-                 ; 0000 00C8 		// 2nd number must be different than 1st
-                 ; 0000 00C9 		if (dial.value != candidate[0].value)
-0000a4 940e 02c4 	CALL SUBOPT_0x2
-0000a6 940e 02c9 	CALL SUBOPT_0x3
-0000a8 f059      	BREQ _0xD
-                 ; 0000 00CA 		{
-                 ; 0000 00CB 			candidate[1].value = dial.value; // save current dial position
-0000a9 940e 02bf 	CALL SUBOPT_0x1
+0000a1 30e1      	CPI  R30,LOW(0x1)
+0000a2 e0a0      	LDI  R26,HIGH(0x1)
+0000a3 07fa      	CPC  R31,R26
+0000a4 f489      	BRNE _0xC
+                 ; 0000 00CB 		// 2nd number must be different than 1st
+                 ; 0000 00CC 		if (dial.value != candidate[0].value)
+0000a5 940e 02d8 	CALL SUBOPT_0x4
+0000a7 940e 02dd 	CALL SUBOPT_0x5
+0000a9 f059      	BREQ _0xD
+                 ; 0000 00CD 		{
+                 ; 0000 00CE 			candidate[1].value = dial.value; // save current dial position
+0000aa 940e 02d3 	CALL SUBOPT_0x3
                 +
-0000ab 93e0 026e+STS _candidate_S0000005000 + ( 2 ) , R30
-0000ad 93f0 026f+STS _candidate_S0000005000 + ( 2 ) + 1 , R31
+0000ac 93e0 026e+STS _candidate_S0000005000 + ( 2 ) , R30
+0000ae 93f0 026f+STS _candidate_S0000005000 + ( 2 ) + 1 , R31
                  	__PUTW1MN _candidate_S0000005000,2
-                 ; 0000 00CC 			LED_blink(2);					 // blink display twice to acknowledge 2nd number saved
-0000af e0a2      	LDI  R26,LOW(2)
-0000b0 dfab      	RCALL _LED_blink
-                 ; 0000 00CD 			prog_state = PROG_2;			 // advance to next state
-0000b1 e0e2      	LDI  R30,LOW(2)
-0000b2 93e0 026b 	STS  _prog_state,R30
-                 ; 0000 00CE 		}
-                 ; 0000 00CF 		break;
+                 ; 0000 00CF 			LED_blink(2);					 // blink display twice to acknowledge 2nd number saved
+0000b0 e0a2      	LDI  R26,LOW(2)
+0000b1 dfaa      	RCALL _LED_blink
+                 ; 0000 00D0 			prog_state = PROG_2;			 // advance to next state
+0000b2 e0e2      	LDI  R30,LOW(2)
+0000b3 93e0 026b 	STS  _prog_state,R30
+                 ; 0000 00D1 		}
+                 ; 0000 00D2 		break;
                  _0xD:
-0000b4 c03c      	RJMP _0xA
-                 ; 0000 00D0 
-                 ; 0000 00D1 	case PROG_2:
+0000b5 c03c      	RJMP _0xA
+                 ; 0000 00D3 
+                 ; 0000 00D4 	case PROG_2:
                  _0xC:
-0000b5 30e2      	CPI  R30,LOW(0x2)
-0000b6 e0a0      	LDI  R26,HIGH(0x2)
-0000b7 07fa      	CPC  R31,R26
-0000b8 f5c1      	BRNE _0x10
-                 ; 0000 00D2 		// 3rd number must be different than 2nd
-                 ; 0000 00D3 		if (dial.value != candidate[1].value)
-0000b9 940e 02d0 	CALL SUBOPT_0x4
-0000bb 940e 02c9 	CALL SUBOPT_0x3
-0000bd f199      	BREQ _0xF
-                 ; 0000 00D4 		{
-                 ; 0000 00D5 			candidate[2].value = dial.value;							   // save current dial position
-0000be 940e 02bf 	CALL SUBOPT_0x1
+0000b6 30e2      	CPI  R30,LOW(0x2)
+0000b7 e0a0      	LDI  R26,HIGH(0x2)
+0000b8 07fa      	CPC  R31,R26
+0000b9 f5c1      	BRNE _0x10
+                 ; 0000 00D5 		// 3rd number must be different than 2nd
+                 ; 0000 00D6 		if (dial.value != candidate[1].value)
+0000ba 940e 02e4 	CALL SUBOPT_0x6
+0000bc 940e 02dd 	CALL SUBOPT_0x5
+0000be f199      	BREQ _0xF
+                 ; 0000 00D7 		{
+                 ; 0000 00D8 			candidate[2].value = dial.value;							   // save current dial position
+0000bf 940e 02d3 	CALL SUBOPT_0x3
                 +
-0000c0 93e0 0270+STS _candidate_S0000005000 + ( 4 ) , R30
-0000c2 93f0 0271+STS _candidate_S0000005000 + ( 4 ) + 1 , R31
+0000c1 93e0 0270+STS _candidate_S0000005000 + ( 4 ) , R30
+0000c3 93f0 0271+STS _candidate_S0000005000 + ( 4 ) + 1 , R31
                  	__PUTW1MN _candidate_S0000005000,4
-                 ; 0000 00D6 			eeprom_write_word(&eeprom_combo[0].value, candidate[0].value); // save 1st number
-0000c4 940e 02c4 	CALL SUBOPT_0x2
-0000c6 e0a3      	LDI  R26,LOW(_eeprom_combo)
-0000c7 e0b0      	LDI  R27,HIGH(_eeprom_combo)
-0000c8 940e 02f9 	CALL __EEPROMWRW
-                 ; 0000 00D7 			eeprom_write_word(&eeprom_combo[1].value, candidate[1].value); // save 2nd number
+                 ; 0000 00D9 			eeprom_write_word(&eeprom_combo[0].value, candidate[0].value); // save 1st number
+0000c5 940e 02d8 	CALL SUBOPT_0x4
+0000c7 e0a3      	LDI  R26,LOW(_eeprom_combo)
+0000c8 e0b0      	LDI  R27,HIGH(_eeprom_combo)
+0000c9 940e 030d 	CALL __EEPROMWRW
+                 ; 0000 00DA 			eeprom_write_word(&eeprom_combo[1].value, candidate[1].value); // save 2nd number
                 +
-0000ca e0a5     +LDI R26 , LOW ( _eeprom_combo + ( 2 ) )
-0000cb e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 2 ) )
+0000cb e0a5     +LDI R26 , LOW ( _eeprom_combo + ( 2 ) )
+0000cc e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 2 ) )
                  	__POINTW2MN _eeprom_combo,2
-0000cc 940e 02d0 	CALL SUBOPT_0x4
-0000ce 940e 02f9 	CALL __EEPROMWRW
-                 ; 0000 00D8 			eeprom_write_word(&eeprom_combo[2].value, candidate[2].value); // save 3rd number
+0000cd 940e 02e4 	CALL SUBOPT_0x6
+0000cf 940e 030d 	CALL __EEPROMWRW
+                 ; 0000 00DB 			eeprom_write_word(&eeprom_combo[2].value, candidate[2].value); // save 3rd number
                 +
-0000d0 e0a7     +LDI R26 , LOW ( _eeprom_combo + ( 4 ) )
-0000d1 e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 4 ) )
+0000d1 e0a7     +LDI R26 , LOW ( _eeprom_combo + ( 4 ) )
+0000d2 e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 4 ) )
                  	__POINTW2MN _eeprom_combo,4
                 +
-0000d2 91e0 0270+LDS R30 , _candidate_S0000005000 + ( 4 )
-0000d4 91f0 0271+LDS R31 , _candidate_S0000005000 + ( 4 ) + 1
+0000d3 91e0 0270+LDS R30 , _candidate_S0000005000 + ( 4 )
+0000d5 91f0 0271+LDS R31 , _candidate_S0000005000 + ( 4 ) + 1
                  	__GETW1MN _candidate_S0000005000,4
-0000d6 940e 02f9 	CALL __EEPROMWRW
-                 ; 0000 00D9 			combo[0].value = candidate[0].value;						   // the new combination
-0000d8 940e 02c4 	CALL SUBOPT_0x2
-0000da 93e0 0264 	STS  _combo,R30
-0000dc 93f0 0265 	STS  _combo+1,R31
-                 ; 0000 00DA 			combo[1].value = candidate[1].value;						   // the new combination
-0000de 940e 02d0 	CALL SUBOPT_0x4
+0000d7 940e 030d 	CALL __EEPROMWRW
+                 ; 0000 00DC 			combo[0].value = candidate[0].value;						   // the new combination
+0000d9 940e 02d8 	CALL SUBOPT_0x4
+0000db 93e0 0264 	STS  _combo,R30
+0000dd 93f0 0265 	STS  _combo+1,R31
+                 ; 0000 00DD 			combo[1].value = candidate[1].value;						   // the new combination
+0000df 940e 02e4 	CALL SUBOPT_0x6
                 +
-0000e0 93e0 0266+STS _combo + ( 2 ) , R30
-0000e2 93f0 0267+STS _combo + ( 2 ) + 1 , R31
+0000e1 93e0 0266+STS _combo + ( 2 ) , R30
+0000e3 93f0 0267+STS _combo + ( 2 ) + 1 , R31
                  	__PUTW1MN _combo,2
-                 ; 0000 00DB 			combo[2].value = candidate[2].value;						   // the new combination
+                 ; 0000 00DE 			combo[2].value = candidate[2].value;						   // the new combination
                 +
-0000e4 91e0 0270+LDS R30 , _candidate_S0000005000 + ( 4 )
-0000e6 91f0 0271+LDS R31 , _candidate_S0000005000 + ( 4 ) + 1
+0000e5 91e0 0270+LDS R30 , _candidate_S0000005000 + ( 4 )
+0000e7 91f0 0271+LDS R31 , _candidate_S0000005000 + ( 4 ) + 1
                  	__GETW1MN _candidate_S0000005000,4
                 +
-0000e8 93e0 0268+STS _combo + ( 4 ) , R30
-0000ea 93f0 0269+STS _combo + ( 4 ) + 1 , R31
+0000e9 93e0 0268+STS _combo + ( 4 ) , R30
+0000eb 93f0 0269+STS _combo + ( 4 ) + 1 , R31
                  	__PUTW1MN _combo,4
-                 ; 0000 00DC 			LED_blink(3);												   // blink display three times to acknowledge 3rd number saved
-0000ec e0a3      	LDI  R26,LOW(3)
-0000ed df6e      	RCALL _LED_blink
-                 ; 0000 00DD 			prog_state = PROG_0;										   // start over
-0000ee e0e0      	LDI  R30,LOW(0)
-0000ef 93e0 026b 	STS  _prog_state,R30
-                 ; 0000 00DE 		}
-                 ; 0000 00DF 		break;
-                 _0xF:
-                 ; 0000 00E0 
-                 ; 0000 00E1 	default: // ??? unknown/unexpected state
-                 _0x10:
+                 ; 0000 00DF 			LED_blink(3);												   // blink display three times to acknowledge 3rd number saved
+0000ed e0a3      	LDI  R26,LOW(3)
+0000ee df6d      	RCALL _LED_blink
+                 ; 0000 00E0 			prog_state = PROG_0;										   // start over
+0000ef e0e0      	LDI  R30,LOW(0)
+0000f0 93e0 026b 	STS  _prog_state,R30
+                 ; 0000 00E1 		}
                  ; 0000 00E2 		break;
-                 ; 0000 00E3 	}
+                 _0xF:
+                 ; 0000 00E3 
+                 ; 0000 00E4 	default: // ??? unknown/unexpected state
+                 _0x10:
+                 ; 0000 00E5 		break;
+                 ; 0000 00E6 	}
                  _0xA:
-                 ; 0000 00E4 }
-0000f1 c03e      	RJMP _0x53
+                 ; 0000 00E7 }
+0000f2 c038      	RJMP _0x53
                  ; .FEND
                  ;
                  ;typedef enum
@@ -1607,796 +1609,802 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  ;
                  ;// Timer1 overflow interrupt service routine
                  ;interrupt[TIM1_OVF] void timer1_ovf_isr(void)
-                 ; 0000 00EE {
+                 ; 0000 00F1 {
                  _timer1_ovf_isr:
                  ; .FSTART _timer1_ovf_isr
-0000f2 940e 02b1 	CALL SUBOPT_0x0
-                 ; 0000 00EF 	// Reinitialize Timer1 value
-                 ; 0000 00F0 	TCNT1H = 0xCA00 >> 8;
-0000f4 ecea      	LDI  R30,LOW(202)
-0000f5 bded      	OUT  0x2D,R30
-                 ; 0000 00F1 	TCNT1L = 0xCA00 & 0xff;
-0000f6 e0e0      	LDI  R30,LOW(0)
-0000f7 bdec      	OUT  0x2C,R30
-                 ; 0000 00F2 	// Place your code here
-                 ; 0000 00F3 	static unsigned char digit = DIGIT_LEFT; // alternate between left & right digits
-                 ; 0000 00F4 
-                 ; 0000 00F5 	if (screensaver_timeout)
-0000f8 2c06      	MOV  R0,R6
-0000f9 2807      	OR   R0,R7
-0000fa f191      	BREQ _0x11
-                 ; 0000 00F6 	{
-                 ; 0000 00F7 		cbi(PORTB, PORTB0); // turn off left digit (tens)
-0000fb 98c0      	CBI  0x18,0
-                 ; 0000 00F8 		cbi(PORTB, PORTB1); // turn off right digit (units)
-0000fc 98c1      	CBI  0x18,1
-                 ; 0000 00F9 
-                 ; 0000 00FA 		screensaver_timeout--; // decrement screensaver timeout value
-0000fd 01f3      	MOVW R30,R6
-0000fe 9731      	SBIW R30,1
-0000ff 013f      	MOVW R6,R30
-                 ; 0000 00FB 		if (screensaver_timeout == 0)
-000100 2c06      	MOV  R0,R6
-000101 2807      	OR   R0,R7
-000102 f499      	BRNE _0x12
-                 ; 0000 00FC 		{
-                 ; 0000 00FD 			// shut down display function
-                 ; 0000 00FE 			eeprom_write_byte(&eeprom_locked, locked);		   // save locked/unlocked status
-000103 940e 02d5 	CALL SUBOPT_0x5
-                 ; 0000 00FF 			eeprom_write_word(&eeprom_dial.value, dial.value); // save current dial position
-000105 940e 02bf 	CALL SUBOPT_0x1
-000107 e0a1      	LDI  R26,LOW(_eeprom_dial)
-000108 e0b0      	LDI  R27,HIGH(_eeprom_dial)
-000109 940e 02f9 	CALL __EEPROMWRW
-                 ; 0000 0100 			if (combo_state != COMBO_MATCH_3)
-00010b 91a0 026a 	LDS  R26,_combo_state
-00010d 30a3      	CPI  R26,LOW(0x3)
-00010e f019      	BREQ _0x13
-                 ; 0000 0101 				combo_state = COMBO_MATCH_0; // reset any combination attempts
-00010f e0e0      	LDI  R30,LOW(0)
-000110 93e0 026a 	STS  _combo_state,R30
-                 ; 0000 0102 			prog_state = PROG_0;			 // cancel any pending combination programming attempts
+0000f3 940e 02c5 	CALL SUBOPT_0x2
+                 ; 0000 00F2 	// Reinitialize Timer1 value
+                 ; 0000 00F3 	TCNT1H = 0xD4CD >> 8;
+0000f5 ede4      	LDI  R30,LOW(212)
+0000f6 bded      	OUT  0x2D,R30
+                 ; 0000 00F4 	TCNT1L = 0xD4CD & 0xff;
+0000f7 eced      	LDI  R30,LOW(205)
+0000f8 bdec      	OUT  0x2C,R30
+                 ; 0000 00F5 
+                 ; 0000 00F6 	// Place your code here
+                 ; 0000 00F7 	static unsigned char digit = DIGIT_LEFT; // alternate between left & right digits
+                 ; 0000 00F8 
+                 ; 0000 00F9 	if (screensaver_timeout)
+0000f9 2c06      	MOV  R0,R6
+0000fa 2807      	OR   R0,R7
+0000fb f161      	BREQ _0x11
+                 ; 0000 00FA 	{
+                 ; 0000 00FB 		cbi(PORTB, PORTB0); // turn off left digit (tens)
+0000fc 98c0      	CBI  0x18,0
+                 ; 0000 00FC 		cbi(PORTB, PORTB1); // turn off right digit (units)
+0000fd 98c1      	CBI  0x18,1
+                 ; 0000 00FD 
+                 ; 0000 00FE 		screensaver_timeout--; // decrement screensaver timeout value
+0000fe 01f3      	MOVW R30,R6
+0000ff 9731      	SBIW R30,1
+000100 013f      	MOVW R6,R30
+                 ; 0000 00FF 		if (screensaver_timeout == 0)
+000101 2c06      	MOV  R0,R6
+000102 2807      	OR   R0,R7
+000103 f499      	BRNE _0x12
+                 ; 0000 0100 		{
+                 ; 0000 0101 			// shut down display function
+                 ; 0000 0102 			eeprom_write_byte(&eeprom_locked, locked);		   // save locked/unlocked status
+000104 940e 02e9 	CALL SUBOPT_0x7
+                 ; 0000 0103 			eeprom_write_word(&eeprom_dial.value, dial.value); // save current dial position
+000106 940e 02d3 	CALL SUBOPT_0x3
+000108 e0a1      	LDI  R26,LOW(_eeprom_dial)
+000109 e0b0      	LDI  R27,HIGH(_eeprom_dial)
+00010a 940e 030d 	CALL __EEPROMWRW
+                 ; 0000 0104 			if (combo_state != COMBO_MATCH_3)
+00010c 91a0 026a 	LDS  R26,_combo_state
+00010e 30a3      	CPI  R26,LOW(0x3)
+00010f f019      	BREQ _0x13
+                 ; 0000 0105 				combo_state = COMBO_MATCH_0; // reset any combination attempts
+000110 e0e0      	LDI  R30,LOW(0)
+000111 93e0 026a 	STS  _combo_state,R30
+                 ; 0000 0106 			prog_state = PROG_0;			 // cancel any pending combination programming attempts
                  _0x13:
-000112 e0e0      	LDI  R30,LOW(0)
-000113 93e0 026b 	STS  _prog_state,R30
-                 ; 0000 0103 
-                 ; 0000 0104 			return; // early exit from interrupt handler, leaving display blank; nothing left to do
-000115 c01a      	RJMP _0x53
-                 ; 0000 0105 		}
-                 ; 0000 0106 
-                 ; 0000 0107 		digit ^= 0x01; // toggle between left & right digits
-                 _0x12:
-000116 91a0 0272 	LDS  R26,_digit_S0000006000
-000118 e0e1      	LDI  R30,LOW(1)
-000119 27ea      	EOR  R30,R26
-00011a 93e0 0272 	STS  _digit_S0000006000,R30
-                 ; 0000 0108 
-                 ; 0000 0109 		delay_ms(DEBOUNCE_DELAY_MS);
-00011c 940e 02db 	CALL SUBOPT_0x6
+000113 e0e0      	LDI  R30,LOW(0)
+000114 93e0 026b 	STS  _prog_state,R30
+                 ; 0000 0107 
+                 ; 0000 0108 			return; // early exit from interrupt handler, leaving display blank; nothing left to do
+000116 c014      	RJMP _0x53
+                 ; 0000 0109 		}
                  ; 0000 010A 
-                 ; 0000 010B 		if (digit == DIGIT_LEFT)
-00011e 91e0 0272 	LDS  R30,_digit_S0000006000
-000120 30e0      	CPI  R30,0
-000121 f431      	BRNE _0x14
-                 ; 0000 010C 		{
-                 ; 0000 010D 			// display left digit
-                 ; 0000 010E 			PORTA = LED_segment(dial.tens);
-000122 91a0 0260 	LDS  R26,_dial
-000124 df25      	RCALL _LED_segment
-000125 bbeb      	OUT  0x1B,R30
-                 ; 0000 010F 			sbi(PORTB, PORTB0); // turn on left digit (tens)
-000126 9ac0      	SBI  0x18,0
-                 ; 0000 0110 		}
-                 ; 0000 0111 		else
-000127 c005      	RJMP _0x15
+                 ; 0000 010B 		digit ^= 0x01; // toggle between left & right digits
+                 _0x12:
+000117 91a0 0272 	LDS  R26,_digit_S0000006000
+000119 e0e1      	LDI  R30,LOW(1)
+00011a 27ea      	EOR  R30,R26
+00011b 93e0 0272 	STS  _digit_S0000006000,R30
+                 ; 0000 010C 
+                 ; 0000 010D 		delay_ms(DEBOUNCE_DELAY_MS);
+00011d 940e 02ef 	CALL SUBOPT_0x8
+                 ; 0000 010E 
+                 ; 0000 010F 		if (digit == DIGIT_LEFT)
+00011f 91e0 0272 	LDS  R30,_digit_S0000006000
+000121 30e0      	CPI  R30,0
+000122 f419      	BRNE _0x14
+                 ; 0000 0110 		{
+                 ; 0000 0111 			// display left digit
+                 ; 0000 0112 			PORTA = LED_segment(dial.tens);
+000123 940e 02b7 	CALL SUBOPT_0x0
+                 ; 0000 0113 			sbi(PORTB, PORTB0); // turn on left digit (tens)
+                 ; 0000 0114 		}
+                 ; 0000 0115 		else
+000125 c002      	RJMP _0x15
                  _0x14:
-                 ; 0000 0112 		{
-                 ; 0000 0113 			// display right digit
-                 ; 0000 0114 			PORTA = LED_segment(dial.units);
-                +
-000128 91a0 0261+LDS R26 , _dial + ( 1 )
-                 	__GETB2MN _dial,1
-00012a df1f      	RCALL _LED_segment
-00012b bbeb      	OUT  0x1B,R30
-                 ; 0000 0115 			sbi(PORTB, PORTB1); // turn on right digit (units)
-00012c 9ac1      	SBI  0x18,1
-                 ; 0000 0116 		}
+                 ; 0000 0116 		{
+                 ; 0000 0117 			// display right digit
+                 ; 0000 0118 			PORTA = LED_segment(dial.units);
+000126 940e 02be 	CALL SUBOPT_0x1
+                 ; 0000 0119 			sbi(PORTB, PORTB1); // turn on right digit (units)
+                 ; 0000 011A 		}
                  _0x15:
-                 ; 0000 0117 	}
-                 ; 0000 0118 
-                 ; 0000 0119     TIFR |= (1 << TOV1); // Clear Timer1 overflow interrupt flag
+                 ; 0000 011B 	}
+                 ; 0000 011C 
+                 ; 0000 011D 	TIFR |= (1 << TOV1); // Clear Timer1 overflow interrupt flag
                  _0x11:
-00012d b7e8      	IN   R30,0x38
-00012e 60e4      	ORI  R30,4
-00012f bfe8      	OUT  0x38,R30
-                 ; 0000 011A }
+000128 b7e8      	IN   R30,0x38
+000129 60e4      	ORI  R30,4
+00012a bfe8      	OUT  0x38,R30
+                 ; 0000 011E }
                  _0x53:
-000130 91e9      	LD   R30,Y+
-000131 bfef      	OUT  SREG,R30
-000132 91f9      	LD   R31,Y+
-000133 91e9      	LD   R30,Y+
-000134 91b9      	LD   R27,Y+
-000135 91a9      	LD   R26,Y+
-000136 9199      	LD   R25,Y+
-000137 9189      	LD   R24,Y+
-000138 9179      	LD   R23,Y+
-000139 9169      	LD   R22,Y+
-00013a 90f9      	LD   R15,Y+
-00013b 9019      	LD   R1,Y+
-00013c 9009      	LD   R0,Y+
-00013d 9518      	RETI
+00012b 91e9      	LD   R30,Y+
+00012c bfef      	OUT  SREG,R30
+00012d 91f9      	LD   R31,Y+
+00012e 91e9      	LD   R30,Y+
+00012f 91b9      	LD   R27,Y+
+000130 91a9      	LD   R26,Y+
+000131 9199      	LD   R25,Y+
+000132 9189      	LD   R24,Y+
+000133 9179      	LD   R23,Y+
+000134 9169      	LD   R22,Y+
+000135 90f9      	LD   R15,Y+
+000136 9019      	LD   R1,Y+
+000137 9009      	LD   R0,Y+
+000138 9518      	RETI
                  ; .FEND
                  ;
                  ;void main(void)
-                 ; 0000 011D {
+                 ; 0000 0121 {
                  _main:
                  ; .FSTART _main
-                 ; 0000 011E 	// Declare your local variables here
-                 ; 0000 011F 	MOTION motion;
-                 ; 0000 0120 
-                 ; 0000 0121 	// Input/Output Ports initialization
-                 ; 0000 0122 	// Port A initialization
-                 ; 0000 0123 	// Function: Bit7=In Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
-                 ; 0000 0124 	DDRA = (0 << DDA7) | (1 << DDA6) | (1 << DDA5) | (1 << DDA4) | (1 << DDA3) | (1 << DDA2) | (1 << DDA1) | (1 << DDA0);
+                 ; 0000 0122 	// Declare your local variables here
+                 ; 0000 0123 	MOTION motion;
+                 ; 0000 0124 
+                 ; 0000 0125 	// Input/Output Ports initialization
+                 ; 0000 0126 	// Port A initialization
+                 ; 0000 0127 	// Function: Bit7=In Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
+                 ; 0000 0128 	DDRA = (0 << DDA7) | (1 << DDA6) | (1 << DDA5) | (1 << DDA4) | (1 << DDA3) | (1 << DDA2) | (1 << DDA1) | (1 << DDA0);
                  ;	motion -> R17
-00013e e7ef      	LDI  R30,LOW(127)
-00013f bbea      	OUT  0x1A,R30
-                 ; 0000 0125 	// State: Bit7=T Bit6=1 Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
-                 ; 0000 0126 	PORTA = (0 << PORTA7) | (1 << PORTA6) | (1 << PORTA5) | (1 << PORTA4) | (1 << PORTA3) | (1 << PORTA2) | (1 << PORTA1) | ...
-000140 bbeb      	OUT  0x1B,R30
-                 ; 0000 0127 
-                 ; 0000 0128 	// Port B initialization
-                 ; 0000 0129 	// Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=Out Bit0=Out
-                 ; 0000 012A 	DDRB = (0 << DDB7) | (0 << DDB6) | (0 << DDB5) | (0 << DDB4) | (0 << DDB3) | (0 << DDB2) | (1 << DDB1) | (1 << DDB0);
-000141 e0e3      	LDI  R30,LOW(3)
-000142 bbe7      	OUT  0x17,R30
-                 ; 0000 012B 	// State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=P Bit1=0 Bit0=0
-                 ; 0000 012C 	PORTB = (0 << PORTB7) | (0 << PORTB6) | (0 << PORTB5) | (0 << PORTB4) | (0 << PORTB3) | (1 << PORTB2) | (0 << PORTB1) | ...
-000143 e0e4      	LDI  R30,LOW(4)
-000144 bbe8      	OUT  0x18,R30
-                 ; 0000 012D 
-                 ; 0000 012E 	// Port C initialization
-                 ; 0000 012F 	// Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
-                 ; 0000 0130 	DDRC = (0 << DDC7) | (0 << DDC6) | (0 << DDC5) | (0 << DDC4) | (0 << DDC3) | (0 << DDC2) | (0 << DDC1) | (0 << DDC0);
-000145 e0e0      	LDI  R30,LOW(0)
-000146 bbe4      	OUT  0x14,R30
-                 ; 0000 0131 	// State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=T Bit1=T Bit0=T
-                 ; 0000 0132 	PORTC = (0 << PORTC7) | (0 << PORTC6) | (0 << PORTC5) | (0 << PORTC4) | (0 << PORTC3) | (0 << PORTC2) | (0 << PORTC1) | ...
-000147 bbe5      	OUT  0x15,R30
-                 ; 0000 0133 
-                 ; 0000 0134 	// Port D initialization
-                 ; 0000 0135 	// Function: Bit7=In Bit6=Out Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
-                 ; 0000 0136 	DDRD = (0 << DDD7) | (1 << DDD6) | (0 << DDD5) | (0 << DDD4) | (0 << DDD3) | (0 << DDD2) | (0 << DDD1) | (0 << DDD0);
-000148 e4e0      	LDI  R30,LOW(64)
-000149 bbe1      	OUT  0x11,R30
-                 ; 0000 0137 	// State: Bit7=T Bit6=1 Bit5=T Bit4=T Bit3=P Bit2=P Bit1=T Bit0=T
-                 ; 0000 0138 	PORTD = (0 << PORTD7) | (1 << PORTD6) | (0 << PORTD5) | (0 << PORTD4) | (1 << PORTD3) | (1 << PORTD2) | (0 << PORTD1) | ...
-00014a e4ec      	LDI  R30,LOW(76)
-00014b bbe2      	OUT  0x12,R30
-                 ; 0000 0139 
-                 ; 0000 013A 	// Timer/Counter 1 initialization
-                 ; 0000 013B 	// Clock source: System Clock
-                 ; 0000 013C 	// Clock value: 1382.400 kHz
-                 ; 0000 013D 	// Mode: Normal top=0xFFFF
-                 ; 0000 013E 	// OC1A output: Disconnected
-                 ; 0000 013F 	// OC1B output: Disconnected
-                 ; 0000 0140 	// Noise Canceler: Off
-                 ; 0000 0141 	// Input Capture on Falling Edge
-                 ; 0000 0142 	// Timer Period: 10 ms
-                 ; 0000 0143 	// Timer1 Overflow Interrupt: On
-                 ; 0000 0144 	// Input Capture Interrupt: Off
-                 ; 0000 0145 	// Compare A Match Interrupt: Off
-                 ; 0000 0146 	// Compare B Match Interrupt: Off
-                 ; 0000 0147 	TCCR1A = (0 << COM1A1) | (0 << COM1A0) | (0 << COM1B1) | (0 << COM1B0) | (0 << WGM11) | (0 << WGM10);
-00014c e0e0      	LDI  R30,LOW(0)
-00014d bdef      	OUT  0x2F,R30
-                 ; 0000 0148 	TCCR1B = (0 << ICNC1) | (0 << ICES1) | (0 << WGM13) | (0 << WGM12) | (0 << CS12) | (1 << CS11) | (0 << CS10);
-00014e e0e2      	LDI  R30,LOW(2)
-00014f bdee      	OUT  0x2E,R30
-                 ; 0000 0149 	TCNT1H = 0xCA;
-000150 ecea      	LDI  R30,LOW(202)
-000151 bded      	OUT  0x2D,R30
-                 ; 0000 014A 	TCNT1L = 0x00;
-000152 e0e0      	LDI  R30,LOW(0)
-000153 bdec      	OUT  0x2C,R30
-                 ; 0000 014B 	ICR1H = 0x00;
-000154 bde7      	OUT  0x27,R30
-                 ; 0000 014C 	ICR1L = 0x00;
-000155 bde6      	OUT  0x26,R30
-                 ; 0000 014D 	OCR1AH = 0x00;
-000156 bdeb      	OUT  0x2B,R30
-                 ; 0000 014E 	OCR1AL = 0x00;
-000157 bdea      	OUT  0x2A,R30
-                 ; 0000 014F 	OCR1BH = 0x00;
-000158 bde9      	OUT  0x29,R30
-                 ; 0000 0150 	OCR1BL = 0x00;
-000159 bde8      	OUT  0x28,R30
-                 ; 0000 0151 
-                 ; 0000 0152 	// Timer(s)/Counter(s) Interrupt(s) initialization
-                 ; 0000 0153 	TIMSK = (0 << OCIE2) | (0 << TOIE2) | (0 << TICIE1) | (0 << OCIE1A) | (0 << OCIE1B) | (1 << TOIE1) | (0 << OCIE0) | (0  ...
-00015a e0e4      	LDI  R30,LOW(4)
-00015b bfe9      	OUT  0x39,R30
-                 ; 0000 0154 
-                 ; 0000 0155 	// External Interrupt(s) initialization
-                 ; 0000 0156 	// INT0: On
-                 ; 0000 0157 	// INT0 Mode: Falling Edge
-                 ; 0000 0158 	// INT1: On
-                 ; 0000 0159 	// INT1 Mode: Falling Edge
-                 ; 0000 015A 	// INT2: On
-                 ; 0000 015B 	// INT2 Mode: Falling Edge
-                 ; 0000 015C 	GICR |= (1 << INT1) | (1 << INT0) | (1 << INT2);
-00015c b7eb      	IN   R30,0x3B
-00015d 6ee0      	ORI  R30,LOW(0xE0)
-00015e bfeb      	OUT  0x3B,R30
-                 ; 0000 015D 	MCUCR = (1 << ISC11) | (0 << ISC10) | (1 << ISC01) | (0 << ISC00);
-00015f e0ea      	LDI  R30,LOW(10)
-000160 bfe5      	OUT  0x35,R30
-                 ; 0000 015E 	MCUCSR = (0 << ISC2);
-000161 e0e0      	LDI  R30,LOW(0)
-000162 bfe4      	OUT  0x34,R30
-                 ; 0000 015F 	GIFR = (1 << INTF1) | (1 << INTF0) | (1 << INTF2);
-000163 eee0      	LDI  R30,LOW(224)
-000164 bfea      	OUT  0x3A,R30
-                 ; 0000 0160 
-                 ; 0000 0161 // Global enable interrupts
-                 ; 0000 0162 #asm("sei")
-000165 9478      	sei
-                 ; 0000 0163 
-                 ; 0000 0164 	// Check eeprom first
-                 ; 0000 0165 	locked = eeprom_read_byte(&eeprom_locked); // saved locked status
-000166 e0a0      	LDI  R26,LOW(_eeprom_locked)
-000167 e0b0      	LDI  R27,HIGH(_eeprom_locked)
-000168 940e 02ed 	CALL __EEPROMRDB
-00016a 2e5e      	MOV  R5,R30
-                 ; 0000 0166 	if (locked == STATUS_UNLOCKED)
-00016b 2055      	TST  R5
-00016c f419      	BRNE _0x16
-                 ; 0000 0167 	{
-                 ; 0000 0168 		unlock(); // unlocked
-00016d 9a96      	SBI  0x12,6
-00016e 2455      	CLR  R5
-                 ; 0000 0169 	}
-                 ; 0000 016A 	else if (locked == STATUS_LOCKED)
-00016f c003      	RJMP _0x17
-                 _0x16:
+000139 e7ef      	LDI  R30,LOW(127)
+00013a bbea      	OUT  0x1A,R30
+                 ; 0000 0129 	// State: Bit7=T Bit6=1 Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
+                 ; 0000 012A 	PORTA = (0 << PORTA7) | (1 << PORTA6) | (1 << PORTA5) | (1 << PORTA4) | (1 << PORTA3) | (1 << PORTA2) | (1 << PORTA1) | ...
+00013b bbeb      	OUT  0x1B,R30
+                 ; 0000 012B 
+                 ; 0000 012C 	// Port B initialization
+                 ; 0000 012D 	// Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=Out Bit0=Out
+                 ; 0000 012E 	DDRB = (0 << DDB7) | (0 << DDB6) | (0 << DDB5) | (0 << DDB4) | (0 << DDB3) | (0 << DDB2) | (1 << DDB1) | (1 << DDB0);
+00013c e0e3      	LDI  R30,LOW(3)
+00013d bbe7      	OUT  0x17,R30
+                 ; 0000 012F 	// State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=P Bit1=0 Bit0=0
+                 ; 0000 0130 	PORTB = (0 << PORTB7) | (0 << PORTB6) | (0 << PORTB5) | (0 << PORTB4) | (0 << PORTB3) | (1 << PORTB2) | (0 << PORTB1) | ...
+00013e e0e4      	LDI  R30,LOW(4)
+00013f bbe8      	OUT  0x18,R30
+                 ; 0000 0131 
+                 ; 0000 0132 	// Port C initialization
+                 ; 0000 0133 	// Function: Bit7=In Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
+                 ; 0000 0134 	DDRC = (0 << DDC7) | (0 << DDC6) | (0 << DDC5) | (0 << DDC4) | (0 << DDC3) | (0 << DDC2) | (0 << DDC1) | (0 << DDC0);
+000140 e0e0      	LDI  R30,LOW(0)
+000141 bbe4      	OUT  0x14,R30
+                 ; 0000 0135 	// State: Bit7=T Bit6=T Bit5=T Bit4=T Bit3=T Bit2=T Bit1=T Bit0=T
+                 ; 0000 0136 	PORTC = (0 << PORTC7) | (0 << PORTC6) | (0 << PORTC5) | (0 << PORTC4) | (0 << PORTC3) | (0 << PORTC2) | (0 << PORTC1) | ...
+000142 bbe5      	OUT  0x15,R30
+                 ; 0000 0137 
+                 ; 0000 0138 	// Port D initialization
+                 ; 0000 0139 	// Function: Bit7=In Bit6=Out Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
+                 ; 0000 013A 	DDRD = (0 << DDD7) | (1 << DDD6) | (0 << DDD5) | (0 << DDD4) | (0 << DDD3) | (0 << DDD2) | (0 << DDD1) | (0 << DDD0);
+000143 e4e0      	LDI  R30,LOW(64)
+000144 bbe1      	OUT  0x11,R30
+                 ; 0000 013B 	// State: Bit7=T Bit6=1 Bit5=T Bit4=T Bit3=P Bit2=P Bit1=T Bit0=T
+                 ; 0000 013C 	PORTD = (0 << PORTD7) | (1 << PORTD6) | (0 << PORTD5) | (0 << PORTD4) | (1 << PORTD3) | (1 << PORTD2) | (0 << PORTD1) | ...
+000145 e4ec      	LDI  R30,LOW(76)
+000146 bbe2      	OUT  0x12,R30
+                 ; 0000 013D 
+                 ; 0000 013E 	// Timer/Counter 1 initialization
+                 ; 0000 013F 	// Clock source: System Clock
+                 ; 0000 0140 	// Clock value: 11059.200 kHz
+                 ; 0000 0141 	// Mode: Normal top=0xFFFF
+                 ; 0000 0142 	// OC1A output: Disconnected
+                 ; 0000 0143 	// OC1B output: Disconnected
+                 ; 0000 0144 	// Noise Canceler: Off
+                 ; 0000 0145 	// Input Capture on Falling Edge
+                 ; 0000 0146 	// Timer Period: 0.99998 ms
+                 ; 0000 0147 	// Timer1 Overflow Interrupt: On
+                 ; 0000 0148 	// Input Capture Interrupt: Off
+                 ; 0000 0149 	// Compare A Match Interrupt: Off
+                 ; 0000 014A 	// Compare B Match Interrupt: Off
+                 ; 0000 014B 	TCCR1A = (0 << COM1A1) | (0 << COM1A0) | (0 << COM1B1) | (0 << COM1B0) | (0 << WGM11) | (0 << WGM10);
+000147 e0e0      	LDI  R30,LOW(0)
+000148 bdef      	OUT  0x2F,R30
+                 ; 0000 014C 	TCCR1B = (0 << ICNC1) | (0 << ICES1) | (0 << WGM13) | (0 << WGM12) | (0 << CS12) | (0 << CS11) | (1 << CS10);
+000149 e0e1      	LDI  R30,LOW(1)
+00014a bdee      	OUT  0x2E,R30
+                 ; 0000 014D 	TCNT1H = 0xD4;
+00014b ede4      	LDI  R30,LOW(212)
+00014c bded      	OUT  0x2D,R30
+                 ; 0000 014E 	TCNT1L = 0xCD;
+00014d eced      	LDI  R30,LOW(205)
+00014e bdec      	OUT  0x2C,R30
+                 ; 0000 014F 	ICR1H = 0x00;
+00014f e0e0      	LDI  R30,LOW(0)
+000150 bde7      	OUT  0x27,R30
+                 ; 0000 0150 	ICR1L = 0x00;
+000151 bde6      	OUT  0x26,R30
+                 ; 0000 0151 	OCR1AH = 0x00;
+000152 bdeb      	OUT  0x2B,R30
+                 ; 0000 0152 	OCR1AL = 0x00;
+000153 bdea      	OUT  0x2A,R30
+                 ; 0000 0153 	OCR1BH = 0x00;
+000154 bde9      	OUT  0x29,R30
+                 ; 0000 0154 	OCR1BL = 0x00;
+000155 bde8      	OUT  0x28,R30
+                 ; 0000 0155 
+                 ; 0000 0156 	// Timer(s)/Counter(s) Interrupt(s) initialization
+                 ; 0000 0157 	TIMSK = (0 << OCIE2) | (0 << TOIE2) | (0 << TICIE1) | (0 << OCIE1A) | (0 << OCIE1B) | (1 << TOIE1) | (0 << OCIE0) | (0  ...
+000156 e0e4      	LDI  R30,LOW(4)
+000157 bfe9      	OUT  0x39,R30
+                 ; 0000 0158 
+                 ; 0000 0159 	// External Interrupt(s) initialization
+                 ; 0000 015A 	// INT0: On
+                 ; 0000 015B 	// INT0 Mode: Falling Edge
+                 ; 0000 015C 	// INT1: On
+                 ; 0000 015D 	// INT1 Mode: Falling Edge
+                 ; 0000 015E 	// INT2: On
+                 ; 0000 015F 	// INT2 Mode: Falling Edge
+                 ; 0000 0160 	GICR |= (1 << INT1) | (1 << INT0) | (1 << INT2);
+000158 b7eb      	IN   R30,0x3B
+000159 6ee0      	ORI  R30,LOW(0xE0)
+00015a bfeb      	OUT  0x3B,R30
+                 ; 0000 0161 	MCUCR = (1 << ISC11) | (0 << ISC10) | (1 << ISC01) | (0 << ISC00);
+00015b e0ea      	LDI  R30,LOW(10)
+00015c bfe5      	OUT  0x35,R30
+                 ; 0000 0162 	MCUCSR = (0 << ISC2);
+00015d e0e0      	LDI  R30,LOW(0)
+00015e bfe4      	OUT  0x34,R30
+                 ; 0000 0163 	GIFR = (1 << INTF1) | (1 << INTF0) | (1 << INTF2);
+00015f eee0      	LDI  R30,LOW(224)
+000160 bfea      	OUT  0x3A,R30
+                 ; 0000 0164 
+                 ; 0000 0165 // Global enable interrupts
+                 ; 0000 0166 #asm("sei")
+000161 9478      	sei
+                 ; 0000 0167 
+                 ; 0000 0168 	// Check eeprom first
+                 ; 0000 0169 	locked = eeprom_read_byte(&eeprom_locked); // saved locked status
+000162 e0a0      	LDI  R26,LOW(_eeprom_locked)
+000163 e0b0      	LDI  R27,HIGH(_eeprom_locked)
+000164 940e 0301 	CALL __EEPROMRDB
+000166 2e5e      	MOV  R5,R30
+                 ; 0000 016A 	if (locked == STATUS_UNLOCKED)
+000167 2055      	TST  R5
+000168 f419      	BRNE _0x16
                  ; 0000 016B 	{
-                 ; 0000 016C 		lock(); // locked
+                 ; 0000 016C 		unlock(); // unlocked
+000169 9a96      	SBI  0x12,6
+00016a 2455      	CLR  R5
                  ; 0000 016D 	}
-                 ; 0000 016E 	else
+                 ; 0000 016E 	else if (locked == STATUS_LOCKED)
+00016b c003      	RJMP _0x17
+                 _0x16:
                  ; 0000 016F 	{
-                 ; 0000 0170 		lock(); // unknown/unexpected state:  default is locked
-                 _0x4E:
-000170 9896      	CBI  0x12,6
-000171 e0e1      	LDI  R30,LOW(1)
-000172 2e5e      	MOV  R5,R30
+                 ; 0000 0170 		lock(); // locked
                  ; 0000 0171 	}
+                 ; 0000 0172 	else
+                 ; 0000 0173 	{
+                 ; 0000 0174 		lock(); // unknown/unexpected state:  default is locked
+                 _0x4E:
+00016c 9896      	CBI  0x12,6
+00016d e0e1      	LDI  R30,LOW(1)
+00016e 2e5e      	MOV  R5,R30
+                 ; 0000 0175 	}
                  _0x17:
-                 ; 0000 0172 
-                 ; 0000 0173 	if (locked == STATUS_LOCKED)
-000173 e0e1      	LDI  R30,LOW(1)
-000174 15e5      	CP   R30,R5
-000175 f429      	BRNE _0x1A
-                 ; 0000 0174 	{
-                 ; 0000 0175 		screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value
-000176 ede0      	LDI  R30,LOW(2000)
-000177 e0f7      	LDI  R31,HIGH(2000)
-000178 013f      	MOVW R6,R30
-                 ; 0000 0176 		combo_state = COMBO_MATCH_0;					 // nothing happening
-000179 e0e0      	LDI  R30,LOW(0)
-00017a c003      	RJMP _0x4F
-                 ; 0000 0177 	}
-                 ; 0000 0178 	else
+                 ; 0000 0176 
+                 ; 0000 0177 	if (locked == STATUS_LOCKED)
+00016f e0e1      	LDI  R30,LOW(1)
+000170 15e5      	CP   R30,R5
+000171 f429      	BRNE _0x1A
+                 ; 0000 0178 	{
+                 ; 0000 0179 		screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value
+000172 efe4      	LDI  R30,LOW(500)
+000173 e0f1      	LDI  R31,HIGH(500)
+000174 013f      	MOVW R6,R30
+                 ; 0000 017A 		combo_state = COMBO_MATCH_0;					 // nothing happening
+000175 e0e0      	LDI  R30,LOW(0)
+000176 c003      	RJMP _0x4F
+                 ; 0000 017B 	}
+                 ; 0000 017C 	else
                  _0x1A:
-                 ; 0000 0179 	{
-                 ; 0000 017A 		screensaver_timeout = 0;	 // if unlocked, current dial position is 3rd number of combination:  DO NOT REVEAL
-00017b 2466      	CLR  R6
-00017c 2477      	CLR  R7
-                 ; 0000 017B 		combo_state = COMBO_MATCH_3; // unlocked, waiting for motion to relock
-00017d e0e3      	LDI  R30,LOW(3)
+                 ; 0000 017D 	{
+                 ; 0000 017E 		screensaver_timeout = 0;	 // if unlocked, current dial position is 3rd number of combination:  DO NOT REVEAL
+000177 2466      	CLR  R6
+000178 2477      	CLR  R7
+                 ; 0000 017F 		combo_state = COMBO_MATCH_3; // unlocked, waiting for motion to relock
+000179 e0e3      	LDI  R30,LOW(3)
                  _0x4F:
-00017e 93e0 026a 	STS  _combo_state,R30
-                 ; 0000 017C 	}
-                 ; 0000 017D 
-                 ; 0000 017E 	dial.value = eeprom_read_word(&eeprom_dial.value); // saved dial position
-000180 e0a1      	LDI  R26,LOW(_eeprom_dial)
-000181 e0b0      	LDI  R27,HIGH(_eeprom_dial)
-000182 940e 02e9 	CALL __EEPROMRDW
-000184 93e0 0260 	STS  _dial,R30
-000186 93f0 0261 	STS  _dial+1,R31
-                 ; 0000 017F 	if ((dial.units >= 0) && (dial.units <= 9) && (dial.tens >= 0) && (dial.tens <= 9))
+00017a 93e0 026a 	STS  _combo_state,R30
+                 ; 0000 0180 	}
+                 ; 0000 0181 
+                 ; 0000 0182 	dial.value = eeprom_read_word(&eeprom_dial.value); // saved dial position
+00017c e0a1      	LDI  R26,LOW(_eeprom_dial)
+00017d e0b0      	LDI  R27,HIGH(_eeprom_dial)
+00017e 940e 02fd 	CALL __EEPROMRDW
+000180 93e0 0260 	STS  _dial,R30
+000182 93f0 0261 	STS  _dial+1,R31
+                 ; 0000 0183 	if ((dial.units >= 0) && (dial.units <= 9) && (dial.tens >= 0) && (dial.tens <= 9))
+                +
+000184 91a0 0261+LDS R26 , _dial + ( 1 )
+                 	__GETB2MN _dial,1
+000186 30a0      	CPI  R26,0
+000187 f064      	BRLT _0x1D
                 +
 000188 91a0 0261+LDS R26 , _dial + ( 1 )
                  	__GETB2MN _dial,1
-00018a 30a0      	CPI  R26,0
-00018b f064      	BRLT _0x1D
-                +
-00018c 91a0 0261+LDS R26 , _dial + ( 1 )
-                 	__GETB2MN _dial,1
-00018e 30aa      	CPI  R26,LOW(0xA)
-00018f f444      	BRGE _0x1D
+00018a 30aa      	CPI  R26,LOW(0xA)
+00018b f444      	BRGE _0x1D
+00018c 91a0 0260 	LDS  R26,_dial
+00018e 30a0      	CPI  R26,0
+00018f f024      	BRLT _0x1D
 000190 91a0 0260 	LDS  R26,_dial
-000192 30a0      	CPI  R26,0
-000193 f024      	BRLT _0x1D
-000194 91a0 0260 	LDS  R26,_dial
-000196 30aa      	CPI  R26,LOW(0xA)
-000197 f00c      	BRLT _0x1E
+000192 30aa      	CPI  R26,LOW(0xA)
+000193 f00c      	BRLT _0x1E
                  _0x1D:
-000198 c001      	RJMP _0x1C
+000194 c001      	RJMP _0x1C
                  _0x1E:
-                 ; 0000 0180 	{
-                 ; 0000 0181 		// saved dial position was valid; continue
-                 ; 0000 0182 	}
-                 ; 0000 0183 	else
-000199 c005      	RJMP _0x1F
-                 _0x1C:
                  ; 0000 0184 	{
-                 ; 0000 0185 		dial.units = 0; // reset dial position
-00019a e0e0      	LDI  R30,LOW(0)
+                 ; 0000 0185 		// saved dial position was valid; continue
+                 ; 0000 0186 	}
+                 ; 0000 0187 	else
+000195 c005      	RJMP _0x1F
+                 _0x1C:
+                 ; 0000 0188 	{
+                 ; 0000 0189 		dial.units = 0; // reset dial position
+000196 e0e0      	LDI  R30,LOW(0)
                 +
-00019b 93e0 0261+STS _dial + ( 1 ) , R30
+000197 93e0 0261+STS _dial + ( 1 ) , R30
                  	__PUTB1MN _dial,1
-                 ; 0000 0186 		dial.tens = 0;
-00019d 93e0 0260 	STS  _dial,R30
-                 ; 0000 0187 	}
+                 ; 0000 018A 		dial.tens = 0;
+000199 93e0 0260 	STS  _dial,R30
+                 ; 0000 018B 	}
                  _0x1F:
-                 ; 0000 0188 
-                 ; 0000 0189 	combo[0].value = eeprom_read_word(&eeprom_combo[0].value); // saved combination 1/3
-00019f e0a3      	LDI  R26,LOW(_eeprom_combo)
-0001a0 e0b0      	LDI  R27,HIGH(_eeprom_combo)
-0001a1 940e 02e9 	CALL __EEPROMRDW
-0001a3 93e0 0264 	STS  _combo,R30
-0001a5 93f0 0265 	STS  _combo+1,R31
-                 ; 0000 018A 	combo[1].value = eeprom_read_word(&eeprom_combo[1].value); // saved combination 2/3
-                +
-0001a7 e0a5     +LDI R26 , LOW ( _eeprom_combo + ( 2 ) )
-0001a8 e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 2 ) )
-                 	__POINTW2MN _eeprom_combo,2
-0001a9 940e 02e9 	CALL __EEPROMRDW
-                +
-0001ab 93e0 0266+STS _combo + ( 2 ) , R30
-0001ad 93f0 0267+STS _combo + ( 2 ) + 1 , R31
-                 	__PUTW1MN _combo,2
-                 ; 0000 018B 	combo[2].value = eeprom_read_word(&eeprom_combo[2].value); // saved combination 3/3
-                +
-0001af e0a7     +LDI R26 , LOW ( _eeprom_combo + ( 4 ) )
-0001b0 e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 4 ) )
-                 	__POINTW2MN _eeprom_combo,4
-0001b1 940e 02e9 	CALL __EEPROMRDW
-                +
-0001b3 93e0 0268+STS _combo + ( 4 ) , R30
-0001b5 93f0 0269+STS _combo + ( 4 ) + 1 , R31
-                 	__PUTW1MN _combo,4
                  ; 0000 018C 
-                 ; 0000 018D 	if ((combo[0].units >= 0) && (combo[0].units <= 9) && (combo[0].tens >= 0) && (combo[0].tens <= 9) && (combo[1].units > ...
+                 ; 0000 018D 	combo[0].value = eeprom_read_word(&eeprom_combo[0].value); // saved combination 1/3
+00019b e0a3      	LDI  R26,LOW(_eeprom_combo)
+00019c e0b0      	LDI  R27,HIGH(_eeprom_combo)
+00019d 940e 02fd 	CALL __EEPROMRDW
+00019f 93e0 0264 	STS  _combo,R30
+0001a1 93f0 0265 	STS  _combo+1,R31
+                 ; 0000 018E 	combo[1].value = eeprom_read_word(&eeprom_combo[1].value); // saved combination 2/3
+                +
+0001a3 e0a5     +LDI R26 , LOW ( _eeprom_combo + ( 2 ) )
+0001a4 e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 2 ) )
+                 	__POINTW2MN _eeprom_combo,2
+0001a5 940e 02fd 	CALL __EEPROMRDW
+                +
+0001a7 93e0 0266+STS _combo + ( 2 ) , R30
+0001a9 93f0 0267+STS _combo + ( 2 ) + 1 , R31
+                 	__PUTW1MN _combo,2
+                 ; 0000 018F 	combo[2].value = eeprom_read_word(&eeprom_combo[2].value); // saved combination 3/3
+                +
+0001ab e0a7     +LDI R26 , LOW ( _eeprom_combo + ( 4 ) )
+0001ac e0b0     +LDI R27 , HIGH ( _eeprom_combo + ( 4 ) )
+                 	__POINTW2MN _eeprom_combo,4
+0001ad 940e 02fd 	CALL __EEPROMRDW
+                +
+0001af 93e0 0268+STS _combo + ( 4 ) , R30
+0001b1 93f0 0269+STS _combo + ( 4 ) + 1 , R31
+                 	__PUTW1MN _combo,4
+                 ; 0000 0190 
+                 ; 0000 0191 	if ((combo[0].units >= 0) && (combo[0].units <= 9) && (combo[0].tens >= 0) && (combo[0].tens <= 9) && (combo[1].units > ...
+                +
+0001b3 91a0 0265+LDS R26 , _combo + ( 1 )
+                 	__GETB2MN _combo,1
+0001b5 30a0      	CPI  R26,0
+0001b6 f164      	BRLT _0x21
                 +
 0001b7 91a0 0265+LDS R26 , _combo + ( 1 )
                  	__GETB2MN _combo,1
-0001b9 30a0      	CPI  R26,0
-0001ba f164      	BRLT _0x21
-                +
-0001bb 91a0 0265+LDS R26 , _combo + ( 1 )
-                 	__GETB2MN _combo,1
-0001bd 30aa      	CPI  R26,LOW(0xA)
-0001be f544      	BRGE _0x21
+0001b9 30aa      	CPI  R26,LOW(0xA)
+0001ba f544      	BRGE _0x21
+0001bb 91a0 0264 	LDS  R26,_combo
+0001bd 30a0      	CPI  R26,0
+0001be f124      	BRLT _0x21
 0001bf 91a0 0264 	LDS  R26,_combo
-0001c1 30a0      	CPI  R26,0
-0001c2 f124      	BRLT _0x21
-0001c3 91a0 0264 	LDS  R26,_combo
-0001c5 30aa      	CPI  R26,LOW(0xA)
-0001c6 f504      	BRGE _0x21
+0001c1 30aa      	CPI  R26,LOW(0xA)
+0001c2 f504      	BRGE _0x21
+                +
+0001c3 91a0 0267+LDS R26 , _combo + ( 3 )
+                 	__GETB2MN _combo,3
+0001c5 30a0      	CPI  R26,0
+0001c6 f0e4      	BRLT _0x21
                 +
 0001c7 91a0 0267+LDS R26 , _combo + ( 3 )
                  	__GETB2MN _combo,3
-0001c9 30a0      	CPI  R26,0
-0001ca f0e4      	BRLT _0x21
+0001c9 30aa      	CPI  R26,LOW(0xA)
+0001ca f4c4      	BRGE _0x21
                 +
-0001cb 91a0 0267+LDS R26 , _combo + ( 3 )
-                 	__GETB2MN _combo,3
-0001cd 30aa      	CPI  R26,LOW(0xA)
-0001ce f4c4      	BRGE _0x21
+0001cb 91a0 0266+LDS R26 , _combo + ( 2 )
+                 	__GETB2MN _combo,2
+0001cd 30a0      	CPI  R26,0
+0001ce f0a4      	BRLT _0x21
                 +
 0001cf 91a0 0266+LDS R26 , _combo + ( 2 )
                  	__GETB2MN _combo,2
-0001d1 30a0      	CPI  R26,0
-0001d2 f0a4      	BRLT _0x21
+0001d1 30aa      	CPI  R26,LOW(0xA)
+0001d2 f484      	BRGE _0x21
                 +
-0001d3 91a0 0266+LDS R26 , _combo + ( 2 )
-                 	__GETB2MN _combo,2
-0001d5 30aa      	CPI  R26,LOW(0xA)
-0001d6 f484      	BRGE _0x21
+0001d3 91a0 0269+LDS R26 , _combo + ( 5 )
+                 	__GETB2MN _combo,5
+0001d5 30a0      	CPI  R26,0
+0001d6 f064      	BRLT _0x21
                 +
 0001d7 91a0 0269+LDS R26 , _combo + ( 5 )
                  	__GETB2MN _combo,5
-0001d9 30a0      	CPI  R26,0
-0001da f064      	BRLT _0x21
+0001d9 30aa      	CPI  R26,LOW(0xA)
+0001da f444      	BRGE _0x21
                 +
-0001db 91a0 0269+LDS R26 , _combo + ( 5 )
-                 	__GETB2MN _combo,5
-0001dd 30aa      	CPI  R26,LOW(0xA)
-0001de f444      	BRGE _0x21
+0001db 91a0 0268+LDS R26 , _combo + ( 4 )
+                 	__GETB2MN _combo,4
+0001dd 30a0      	CPI  R26,0
+0001de f024      	BRLT _0x21
                 +
 0001df 91a0 0268+LDS R26 , _combo + ( 4 )
                  	__GETB2MN _combo,4
-0001e1 30a0      	CPI  R26,0
-0001e2 f024      	BRLT _0x21
-                +
-0001e3 91a0 0268+LDS R26 , _combo + ( 4 )
-                 	__GETB2MN _combo,4
-0001e5 30aa      	CPI  R26,LOW(0xA)
-0001e6 f00c      	BRLT _0x22
+0001e1 30aa      	CPI  R26,LOW(0xA)
+0001e2 f00c      	BRLT _0x22
                  _0x21:
-0001e7 c001      	RJMP _0x20
+0001e3 c001      	RJMP _0x20
                  _0x22:
-                 ; 0000 018E 	{
-                 ; 0000 018F 		// saved combination was valid; continue
-                 ; 0000 0190 	}
-                 ; 0000 0191 	else
-0001e8 c012      	RJMP _0x23
-                 _0x20:
                  ; 0000 0192 	{
-                 ; 0000 0193 		combo[0].units = 3; // default combination 1/3
-0001e9 e0e3      	LDI  R30,LOW(3)
+                 ; 0000 0193 		// saved combination was valid; continue
+                 ; 0000 0194 	}
+                 ; 0000 0195 	else
+0001e4 c012      	RJMP _0x23
+                 _0x20:
+                 ; 0000 0196 	{
+                 ; 0000 0197 		combo[0].units = 3; // default combination 1/3
+0001e5 e0e3      	LDI  R30,LOW(3)
                 +
-0001ea 93e0 0265+STS _combo + ( 1 ) , R30
+0001e6 93e0 0265+STS _combo + ( 1 ) , R30
                  	__PUTB1MN _combo,1
-                 ; 0000 0194 		combo[0].tens = 0;
-0001ec e0e0      	LDI  R30,LOW(0)
-0001ed 93e0 0264 	STS  _combo,R30
-                 ; 0000 0195 		combo[1].units = 1; // default combination 2/3
-0001ef e0e1      	LDI  R30,LOW(1)
+                 ; 0000 0198 		combo[0].tens = 0;
+0001e8 e0e0      	LDI  R30,LOW(0)
+0001e9 93e0 0264 	STS  _combo,R30
+                 ; 0000 0199 		combo[1].units = 1; // default combination 2/3
+0001eb e0e1      	LDI  R30,LOW(1)
                 +
-0001f0 93e0 0267+STS _combo + ( 3 ) , R30
+0001ec 93e0 0267+STS _combo + ( 3 ) , R30
                  	__PUTB1MN _combo,3
-                 ; 0000 0196 		combo[1].tens = 0;
-0001f2 e0e0      	LDI  R30,LOW(0)
+                 ; 0000 019A 		combo[1].tens = 0;
+0001ee e0e0      	LDI  R30,LOW(0)
                 +
-0001f3 93e0 0266+STS _combo + ( 2 ) , R30
+0001ef 93e0 0266+STS _combo + ( 2 ) , R30
                  	__PUTB1MN _combo,2
-                 ; 0000 0197 		combo[2].units = 4; // default combination 3/3
-0001f5 e0e4      	LDI  R30,LOW(4)
+                 ; 0000 019B 		combo[2].units = 4; // default combination 3/3
+0001f1 e0e4      	LDI  R30,LOW(4)
                 +
-0001f6 93e0 0269+STS _combo + ( 5 ) , R30
+0001f2 93e0 0269+STS _combo + ( 5 ) , R30
                  	__PUTB1MN _combo,5
-                 ; 0000 0198 		combo[2].tens = 0;
-0001f8 e0e0      	LDI  R30,LOW(0)
+                 ; 0000 019C 		combo[2].tens = 0;
+0001f4 e0e0      	LDI  R30,LOW(0)
                 +
-0001f9 93e0 0268+STS _combo + ( 4 ) , R30
+0001f5 93e0 0268+STS _combo + ( 4 ) , R30
                  	__PUTB1MN _combo,4
-                 ; 0000 0199 	}
+                 ; 0000 019D 	}
                  _0x23:
-                 ; 0000 019A 
-                 ; 0000 019B 	sei(); // enable global interrupts
-0001fb 9478      	sei
-                 ; 0000 019C 
-                 ; 0000 019D 	sleep_enable();
-0001fc d0b0      	RCALL _sleep_enable
                  ; 0000 019E 
-                 ; 0000 019F 	while (1)
+                 ; 0000 019F 	sei(); // enable global interrupts
+0001f7 9478      	sei
+                 ; 0000 01A0 
+                 ; 0000 01A1 	sleep_enable();
+0001f8 d0ba      	RCALL _sleep_enable
+                 ; 0000 01A2 
+                 ; 0000 01A3 	while (1)
                  _0x24:
-                 ; 0000 01A0 	{
-                 ; 0000 01A1 		// Wait for motion
-                 ; 0000 01A2 		while (motion_direction != 0xAA && motion_direction != 0x55)
+                 ; 0000 01A4 	{
+                 ; 0000 01A5 
+                 ; 0000 01A6 		screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value - turns display on
+0001f9 efe4      	LDI  R30,LOW(500)
+0001fa e0f1      	LDI  R31,HIGH(500)
+0001fb 013f      	MOVW R6,R30
+                 ; 0000 01A7 
+                 ; 0000 01A8 		// Wait for motion
+                 ; 0000 01A9 		while (motion_direction != 0xAA && motion_direction != 0x55)
                  _0x27:
-0001fd eaea      	LDI  R30,LOW(170)
-0001fe e0f0      	LDI  R31,HIGH(170)
-0001ff 15e8      	CP   R30,R8
-000200 05f9      	CPC  R31,R9
-000201 f029      	BREQ _0x2A
-000202 e5e5      	LDI  R30,LOW(85)
-000203 e0f0      	LDI  R31,HIGH(85)
-000204 15e8      	CP   R30,R8
-000205 05f9      	CPC  R31,R9
-000206 f409      	BRNE _0x2B
+0001fc eaea      	LDI  R30,LOW(170)
+0001fd e0f0      	LDI  R31,HIGH(170)
+0001fe 15e8      	CP   R30,R8
+0001ff 05f9      	CPC  R31,R9
+000200 f029      	BREQ _0x2A
+000201 e5e5      	LDI  R30,LOW(85)
+000202 e0f0      	LDI  R31,HIGH(85)
+000203 15e8      	CP   R30,R8
+000204 05f9      	CPC  R31,R9
+000205 f409      	BRNE _0x2B
                  _0x2A:
-000207 c001      	RJMP _0x29
+000206 c001      	RJMP _0x29
                  _0x2B:
-                 ; 0000 01A3 			;
-000208 cff4      	RJMP _0x27
+                 ; 0000 01AA 			;
+000207 cff4      	RJMP _0x27
                  _0x29:
-                 ; 0000 01A4 
-                 ; 0000 01A5 		// Determine motion direction
-                 ; 0000 01A6 		switch (motion_direction)
-000209 01f4      	MOVW R30,R8
-                 ; 0000 01A7 		{
-                 ; 0000 01A8 		case 0xAA:
-00020a 3aea      	CPI  R30,LOW(0xAA)
-00020b e0a0      	LDI  R26,HIGH(0xAA)
-00020c 07fa      	CPC  R31,R26
-00020d f411      	BRNE _0x2F
-                 ; 0000 01A9 			motion = MOTION_RIGHT;
-00020e e010      	LDI  R17,LOW(0)
-                 ; 0000 01AA 			break;
-00020f c005      	RJMP _0x2E
-                 ; 0000 01AB 		case 0x55:
-                 _0x2F:
-000210 35e5      	CPI  R30,LOW(0x55)
-000211 e0a0      	LDI  R26,HIGH(0x55)
-000212 07fa      	CPC  R31,R26
-000213 f409      	BRNE _0x31
-                 ; 0000 01AC 			motion = MOTION_LEFT;
-000214 e011      	LDI  R17,LOW(1)
-                 ; 0000 01AD 			break;
-                 ; 0000 01AE 		default:
-                 _0x31:
-                 ; 0000 01AF 			// motion = null;
+                 ; 0000 01AB 		// Determine motion direction
+                 ; 0000 01AC 		switch (motion_direction)
+000208 01f4      	MOVW R30,R8
+                 ; 0000 01AD 		{
+                 ; 0000 01AE 		case 0xAA:
+000209 3aea      	CPI  R30,LOW(0xAA)
+00020a e0a0      	LDI  R26,HIGH(0xAA)
+00020b 07fa      	CPC  R31,R26
+00020c f411      	BRNE _0x2F
+                 ; 0000 01AF 			motion = MOTION_RIGHT;
+00020d e010      	LDI  R17,LOW(0)
                  ; 0000 01B0 			break;
-                 ; 0000 01B1 		}
+00020e c005      	RJMP _0x2E
+                 ; 0000 01B1 		case 0x55:
+                 _0x2F:
+00020f 35e5      	CPI  R30,LOW(0x55)
+000210 e0a0      	LDI  R26,HIGH(0x55)
+000211 07fa      	CPC  R31,R26
+000212 f409      	BRNE _0x31
+                 ; 0000 01B2 			motion = MOTION_LEFT;
+000213 e011      	LDI  R17,LOW(1)
+                 ; 0000 01B3 			break;
+                 ; 0000 01B4 		default:
+                 _0x31:
+                 ; 0000 01B5 			// motion = null;
+                 ; 0000 01B6 			break;
+                 ; 0000 01B7 		}
                  _0x2E:
-                 ; 0000 01B2 
-                 ; 0000 01B3 		delay_ms(DEBOUNCE_DELAY_MS);
-000215 940e 02db 	CALL SUBOPT_0x6
-                 ; 0000 01B4 
-                 ; 0000 01B5 		switch (motion)
-000217 2fe1      	MOV  R30,R17
-000218 e0f0      	LDI  R31,0
-                 ; 0000 01B6 		{
-                 ; 0000 01B7 		case MOTION_RIGHT:
-000219 9730      	SBIW R30,0
-00021a f4d1      	BRNE _0x35
-                 ; 0000 01B8 		{
-                 ; 0000 01B9 			dial.units++; // increment dial position
+                 ; 0000 01B8 
+                 ; 0000 01B9 		delay_ms(DEBOUNCE_DELAY_MS);
+000214 940e 02ef 	CALL SUBOPT_0x8
+                 ; 0000 01BA 
+                 ; 0000 01BB 		switch (motion)
+000216 2fe1      	MOV  R30,R17
+000217 e0f0      	LDI  R31,0
+                 ; 0000 01BC 		{
+                 ; 0000 01BD 		case MOTION_RIGHT:
+000218 9730      	SBIW R30,0
+000219 f4d1      	BRNE _0x35
+                 ; 0000 01BE 		{
+                 ; 0000 01BF 			dial.units++; // increment dial position
                 +
-00021b 91e0 0261+LDS R30 , _dial + ( 1 )
+00021a 91e0 0261+LDS R30 , _dial + ( 1 )
                  	__GETB1MN _dial,1
-00021d 5fef      	SUBI R30,-LOW(1)
+00021c 5fef      	SUBI R30,-LOW(1)
                 +
-00021e 93e0 0261+STS _dial + ( 1 ) , R30
+00021d 93e0 0261+STS _dial + ( 1 ) , R30
                  	__PUTB1MN _dial,1
-000220 50e1      	SUBI R30,LOW(1)
-                 ; 0000 01BA 			if (dial.units > 9)
+00021f 50e1      	SUBI R30,LOW(1)
+                 ; 0000 01C0 			if (dial.units > 9)
                 +
-000221 91a0 0261+LDS R26 , _dial + ( 1 )
+000220 91a0 0261+LDS R26 , _dial + ( 1 )
                  	__GETB2MN _dial,1
-000223 30aa      	CPI  R26,LOW(0xA)
-000224 f07c      	BRLT _0x36
-                 ; 0000 01BB 			{
-                 ; 0000 01BC 				dial.units = 0; // reset units on overflow
-000225 e0e0      	LDI  R30,LOW(0)
+000222 30aa      	CPI  R26,LOW(0xA)
+000223 f07c      	BRLT _0x36
+                 ; 0000 01C1 			{
+                 ; 0000 01C2 				dial.units = 0; // reset units on overflow
+000224 e0e0      	LDI  R30,LOW(0)
                 +
-000226 93e0 0261+STS _dial + ( 1 ) , R30
+000225 93e0 0261+STS _dial + ( 1 ) , R30
                  	__PUTB1MN _dial,1
-                 ; 0000 01BD 				dial.tens++;	// increment tens digit
-000228 91e0 0260 	LDS  R30,_dial
-00022a 5fef      	SUBI R30,-LOW(1)
-00022b 93e0 0260 	STS  _dial,R30
-                 ; 0000 01BE 				if (dial.tens > 9)
-00022d 91a0 0260 	LDS  R26,_dial
-00022f 30aa      	CPI  R26,LOW(0xA)
-000230 f01c      	BRLT _0x37
-                 ; 0000 01BF 					dial.tens = 0; // reset on overflow
-000231 e0e0      	LDI  R30,LOW(0)
-000232 93e0 0260 	STS  _dial,R30
-                 ; 0000 01C0 			}
+                 ; 0000 01C3 				dial.tens++;	// increment tens digit
+000227 91e0 0260 	LDS  R30,_dial
+000229 5fef      	SUBI R30,-LOW(1)
+00022a 93e0 0260 	STS  _dial,R30
+                 ; 0000 01C4 				if (dial.tens > 9)
+00022c 91a0 0260 	LDS  R26,_dial
+00022e 30aa      	CPI  R26,LOW(0xA)
+00022f f01c      	BRLT _0x37
+                 ; 0000 01C5 					dial.tens = 0; // reset on overflow
+000230 e0e0      	LDI  R30,LOW(0)
+000231 93e0 0260 	STS  _dial,R30
+                 ; 0000 01C6 			}
                  _0x37:
-                 ; 0000 01C1 			break;
+                 ; 0000 01C7 			break;
                  _0x36:
-000234 c01d      	RJMP _0x34
-                 ; 0000 01C2 		}
-                 ; 0000 01C3 
-                 ; 0000 01C4 		case MOTION_LEFT:
+000233 c01d      	RJMP _0x34
+                 ; 0000 01C8 		}
+                 ; 0000 01C9 
+                 ; 0000 01CA 		case MOTION_LEFT:
                  _0x35:
-000235 30e1      	CPI  R30,LOW(0x1)
-000236 e0a0      	LDI  R26,HIGH(0x1)
-000237 07fa      	CPC  R31,R26
-000238 f4c9      	BRNE _0x3B
-                 ; 0000 01C5 		{
-                 ; 0000 01C6 			dial.units--; // decrement dial position
+000234 30e1      	CPI  R30,LOW(0x1)
+000235 e0a0      	LDI  R26,HIGH(0x1)
+000236 07fa      	CPC  R31,R26
+000237 f4c9      	BRNE _0x3B
+                 ; 0000 01CB 		{
+                 ; 0000 01CC 			dial.units--; // decrement dial position
                 +
-000239 91e0 0261+LDS R30 , _dial + ( 1 )
+000238 91e0 0261+LDS R30 , _dial + ( 1 )
                  	__GETB1MN _dial,1
-00023b 50e1      	SUBI R30,LOW(1)
+00023a 50e1      	SUBI R30,LOW(1)
                 +
-00023c 93e0 0261+STS _dial + ( 1 ) , R30
+00023b 93e0 0261+STS _dial + ( 1 ) , R30
                  	__PUTB1MN _dial,1
-00023e 5fef      	SUBI R30,-LOW(1)
-                 ; 0000 01C7 			if (dial.units < 0)
+00023d 5fef      	SUBI R30,-LOW(1)
+                 ; 0000 01CD 			if (dial.units < 0)
                 +
-00023f 91a0 0261+LDS R26 , _dial + ( 1 )
+00023e 91a0 0261+LDS R26 , _dial + ( 1 )
                  	__GETB2MN _dial,1
-000241 30a0      	CPI  R26,0
-000242 f47c      	BRGE _0x39
-                 ; 0000 01C8 			{
-                 ; 0000 01C9 				dial.units = 9; // rollover on underflow
-000243 e0e9      	LDI  R30,LOW(9)
+000240 30a0      	CPI  R26,0
+000241 f47c      	BRGE _0x39
+                 ; 0000 01CE 			{
+                 ; 0000 01CF 				dial.units = 9; // rollover on underflow
+000242 e0e9      	LDI  R30,LOW(9)
                 +
-000244 93e0 0261+STS _dial + ( 1 ) , R30
+000243 93e0 0261+STS _dial + ( 1 ) , R30
                  	__PUTB1MN _dial,1
-                 ; 0000 01CA 				dial.tens--;	// decrement tens digit
-000246 91e0 0260 	LDS  R30,_dial
-000248 50e1      	SUBI R30,LOW(1)
-000249 93e0 0260 	STS  _dial,R30
-                 ; 0000 01CB 				if (dial.tens < 0)
-00024b 91a0 0260 	LDS  R26,_dial
-00024d 30a0      	CPI  R26,0
-00024e f41c      	BRGE _0x3A
-                 ; 0000 01CC 					dial.tens = 9; // rollover on underflow
-00024f e0e9      	LDI  R30,LOW(9)
-000250 93e0 0260 	STS  _dial,R30
-                 ; 0000 01CD 			}
+                 ; 0000 01D0 				dial.tens--;	// decrement tens digit
+000245 91e0 0260 	LDS  R30,_dial
+000247 50e1      	SUBI R30,LOW(1)
+000248 93e0 0260 	STS  _dial,R30
+                 ; 0000 01D1 				if (dial.tens < 0)
+00024a 91a0 0260 	LDS  R26,_dial
+00024c 30a0      	CPI  R26,0
+00024d f41c      	BRGE _0x3A
+                 ; 0000 01D2 					dial.tens = 9; // rollover on underflow
+00024e e0e9      	LDI  R30,LOW(9)
+00024f 93e0 0260 	STS  _dial,R30
+                 ; 0000 01D3 			}
                  _0x3A:
-                 ; 0000 01CE 			break;
+                 ; 0000 01D4 			break;
                  _0x39:
-                 ; 0000 01CF 		}
-                 ; 0000 01D0 
-                 ; 0000 01D1 		default:
-                 _0x3B:
-                 ; 0000 01D2 			break;
-                 ; 0000 01D3 		}
-                 _0x34:
-                 ; 0000 01D4 
-                 ; 0000 01D5 		delay_ms(DEBOUNCE_DELAY_MS);
-000252 940e 02db 	CALL SUBOPT_0x6
+                 ; 0000 01D5 		}
                  ; 0000 01D6 
-                 ; 0000 01D7 		// Check combination match
-                 ; 0000 01D8 		switch (combo_state)
-000254 91e0 026a 	LDS  R30,_combo_state
-000256 e0f0      	LDI  R31,0
-                 ; 0000 01D9 		{
+                 ; 0000 01D7 		default:
+                 _0x3B:
+                 ; 0000 01D8 			break;
+                 ; 0000 01D9 		}
+                 _0x34:
                  ; 0000 01DA 
-                 ; 0000 01DB 		case COMBO_MATCH_0:
-000257 9730      	SBIW R30,0
-000258 f479      	BRNE _0x3F
-                 ; 0000 01DC 			// detect retrograde motion
-                 ; 0000 01DD 			if (motion == MOTION_LEFT)
-000259 3011      	CPI  R17,1
-00025a f411      	BRNE _0x40
-                 ; 0000 01DE 			{
-                 ; 0000 01DF 				combo_state = COMBO_MATCH_0; // start over
-00025b e0e0      	LDI  R30,LOW(0)
-00025c c008      	RJMP _0x50
-                 ; 0000 01E0 			}
-                 ; 0000 01E1 			else
+                 ; 0000 01DB 		delay_ms(DEBOUNCE_DELAY_MS);
+000251 940e 02ef 	CALL SUBOPT_0x8
+                 ; 0000 01DC 
+                 ; 0000 01DD 		// Check combination match
+                 ; 0000 01DE 		switch (combo_state)
+000253 91e0 026a 	LDS  R30,_combo_state
+000255 e0f0      	LDI  R31,0
+                 ; 0000 01DF 		{
+                 ; 0000 01E0 
+                 ; 0000 01E1 		case COMBO_MATCH_0:
+000256 9730      	SBIW R30,0
+000257 f479      	BRNE _0x3F
+                 ; 0000 01E2 			// detect retrograde motion
+                 ; 0000 01E3 			if (motion == MOTION_LEFT)
+000258 3011      	CPI  R17,1
+000259 f411      	BRNE _0x40
+                 ; 0000 01E4 			{
+                 ; 0000 01E5 				combo_state = COMBO_MATCH_0; // start over
+00025a e0e0      	LDI  R30,LOW(0)
+00025b c008      	RJMP _0x50
+                 ; 0000 01E6 			}
+                 ; 0000 01E7 			else
                  _0x40:
-                 ; 0000 01E2 			{
-                 ; 0000 01E3 				// look for 1st number match
-                 ; 0000 01E4 				if (dial.value == combo[0].value)
-00025d 91e0 0264 	LDS  R30,_combo
-00025f 91f0 0265 	LDS  R31,_combo+1
-000261 940e 02c9 	CALL SUBOPT_0x3
-000263 f419      	BRNE _0x42
-                 ; 0000 01E5 				{
-                 ; 0000 01E6 					// matched first number of combination
-                 ; 0000 01E7 					combo_state = COMBO_MATCH_1; // advance to next state
-000264 e0e1      	LDI  R30,LOW(1)
+                 ; 0000 01E8 			{
+                 ; 0000 01E9 				// look for 1st number match
+                 ; 0000 01EA 				if (dial.value == combo[0].value)
+00025c 91e0 0264 	LDS  R30,_combo
+00025e 91f0 0265 	LDS  R31,_combo+1
+000260 940e 02dd 	CALL SUBOPT_0x5
+000262 f419      	BRNE _0x42
+                 ; 0000 01EB 				{
+                 ; 0000 01EC 					// matched first number of combination
+                 ; 0000 01ED 					combo_state = COMBO_MATCH_1; // advance to next state
+000263 e0e1      	LDI  R30,LOW(1)
                  _0x50:
-000265 93e0 026a 	STS  _combo_state,R30
-                 ; 0000 01E8 				}
-                 ; 0000 01E9 			}
+000264 93e0 026a 	STS  _combo_state,R30
+                 ; 0000 01EE 				}
+                 ; 0000 01EF 			}
                  _0x42:
-                 ; 0000 01EA 			break;
-000267 c038      	RJMP _0x3E
-                 ; 0000 01EB 
-                 ; 0000 01EC 		case COMBO_MATCH_1:
+                 ; 0000 01F0 			break;
+000266 c038      	RJMP _0x3E
+                 ; 0000 01F1 
+                 ; 0000 01F2 		case COMBO_MATCH_1:
                  _0x3F:
-000268 30e1      	CPI  R30,LOW(0x1)
-000269 e0a0      	LDI  R26,HIGH(0x1)
-00026a 07fa      	CPC  R31,R26
-00026b f479      	BRNE _0x43
-                 ; 0000 01ED 			// detect retrograde motion
-                 ; 0000 01EE 			if (motion == MOTION_RIGHT)
-00026c 3010      	CPI  R17,0
-00026d f411      	BRNE _0x44
-                 ; 0000 01EF 			{
-                 ; 0000 01F0 				combo_state = COMBO_MATCH_0; // start over
-00026e e0e0      	LDI  R30,LOW(0)
-00026f c008      	RJMP _0x51
-                 ; 0000 01F1 			}
-                 ; 0000 01F2 			else
+000267 30e1      	CPI  R30,LOW(0x1)
+000268 e0a0      	LDI  R26,HIGH(0x1)
+000269 07fa      	CPC  R31,R26
+00026a f479      	BRNE _0x43
+                 ; 0000 01F3 			// detect retrograde motion
+                 ; 0000 01F4 			if (motion == MOTION_RIGHT)
+00026b 3010      	CPI  R17,0
+00026c f411      	BRNE _0x44
+                 ; 0000 01F5 			{
+                 ; 0000 01F6 				combo_state = COMBO_MATCH_0; // start over
+00026d e0e0      	LDI  R30,LOW(0)
+00026e c008      	RJMP _0x51
+                 ; 0000 01F7 			}
+                 ; 0000 01F8 			else
                  _0x44:
-                 ; 0000 01F3 			{
-                 ; 0000 01F4 				// look for 2nd number match
-                 ; 0000 01F5 				if (dial.value == combo[1].value)
+                 ; 0000 01F9 			{
+                 ; 0000 01FA 				// look for 2nd number match
+                 ; 0000 01FB 				if (dial.value == combo[1].value)
                 +
-000270 91e0 0266+LDS R30 , _combo + ( 2 )
-000272 91f0 0267+LDS R31 , _combo + ( 2 ) + 1
+00026f 91e0 0266+LDS R30 , _combo + ( 2 )
+000271 91f0 0267+LDS R31 , _combo + ( 2 ) + 1
                  	__GETW1MN _combo,2
-000274 940e 02c9 	CALL SUBOPT_0x3
-000276 f419      	BRNE _0x46
-                 ; 0000 01F6 				{
-                 ; 0000 01F7 					// matched second number of combination
-                 ; 0000 01F8 					combo_state = COMBO_MATCH_2; // advance to next state
-000277 e0e2      	LDI  R30,LOW(2)
+000273 940e 02dd 	CALL SUBOPT_0x5
+000275 f419      	BRNE _0x46
+                 ; 0000 01FC 				{
+                 ; 0000 01FD 					// matched second number of combination
+                 ; 0000 01FE 					combo_state = COMBO_MATCH_2; // advance to next state
+000276 e0e2      	LDI  R30,LOW(2)
                  _0x51:
-000278 93e0 026a 	STS  _combo_state,R30
-                 ; 0000 01F9 				}
-                 ; 0000 01FA 			}
+000277 93e0 026a 	STS  _combo_state,R30
+                 ; 0000 01FF 				}
+                 ; 0000 0200 			}
                  _0x46:
-                 ; 0000 01FB 			break;
-00027a c025      	RJMP _0x3E
-                 ; 0000 01FC 
-                 ; 0000 01FD 		case COMBO_MATCH_2:
+                 ; 0000 0201 			break;
+000279 c025      	RJMP _0x3E
+                 ; 0000 0202 
+                 ; 0000 0203 		case COMBO_MATCH_2:
                  _0x43:
-00027b 30e2      	CPI  R30,LOW(0x2)
-00027c e0a0      	LDI  R26,HIGH(0x2)
-00027d 07fa      	CPC  R31,R26
-00027e f4a9      	BRNE _0x47
-                 ; 0000 01FE 			// detect retrograde motion
-                 ; 0000 01FF 			if (motion == MOTION_LEFT)
-00027f 3011      	CPI  R17,1
-000280 f411      	BRNE _0x48
-                 ; 0000 0200 			{
-                 ; 0000 0201 				combo_state = COMBO_MATCH_0; // start over
-000281 e0e0      	LDI  R30,LOW(0)
-000282 c00e      	RJMP _0x52
-                 ; 0000 0202 			}
-                 ; 0000 0203 			else
+00027a 30e2      	CPI  R30,LOW(0x2)
+00027b e0a0      	LDI  R26,HIGH(0x2)
+00027c 07fa      	CPC  R31,R26
+00027d f4a9      	BRNE _0x47
+                 ; 0000 0204 			// detect retrograde motion
+                 ; 0000 0205 			if (motion == MOTION_LEFT)
+00027e 3011      	CPI  R17,1
+00027f f411      	BRNE _0x48
+                 ; 0000 0206 			{
+                 ; 0000 0207 				combo_state = COMBO_MATCH_0; // start over
+000280 e0e0      	LDI  R30,LOW(0)
+000281 c00e      	RJMP _0x52
+                 ; 0000 0208 			}
+                 ; 0000 0209 			else
                  _0x48:
-                 ; 0000 0204 			{
-                 ; 0000 0205 				// look for 3rd number match
-                 ; 0000 0206 				if (dial.value == combo[2].value)
+                 ; 0000 020A 			{
+                 ; 0000 020B 				// look for 3rd number match
+                 ; 0000 020C 				if (dial.value == combo[2].value)
                 +
-000283 91e0 0268+LDS R30 , _combo + ( 4 )
-000285 91f0 0269+LDS R31 , _combo + ( 4 ) + 1
+000282 91e0 0268+LDS R30 , _combo + ( 4 )
+000284 91f0 0269+LDS R31 , _combo + ( 4 ) + 1
                  	__GETW1MN _combo,4
-000287 940e 02c9 	CALL SUBOPT_0x3
-000289 f449      	BRNE _0x4A
-                 ; 0000 0207 				{
-                 ; 0000 0208 					unlock();								   // combination satisfied
-00028a 9a96      	SBI  0x12,6
-00028b 2455      	CLR  R5
-                 ; 0000 0209 					eeprom_write_byte(&eeprom_locked, locked); // save unlocked status
-00028c 940e 02d5 	CALL SUBOPT_0x5
-                 ; 0000 020A 					LED_blink(5);
-00028e e0a5      	LDI  R26,LOW(5)
-00028f ddcc      	RCALL _LED_blink
-                 ; 0000 020B 					combo_state = COMBO_MATCH_3; // advance to next state
-000290 e0e3      	LDI  R30,LOW(3)
+000286 940e 02dd 	CALL SUBOPT_0x5
+000288 f449      	BRNE _0x4A
+                 ; 0000 020D 				{
+                 ; 0000 020E 					unlock();								   // combination satisfied
+000289 9a96      	SBI  0x12,6
+00028a 2455      	CLR  R5
+                 ; 0000 020F 					eeprom_write_byte(&eeprom_locked, locked); // save unlocked status
+00028b 940e 02e9 	CALL SUBOPT_0x7
+                 ; 0000 0210 					LED_blink(5);
+00028d e0a5      	LDI  R26,LOW(5)
+00028e ddcd      	RCALL _LED_blink
+                 ; 0000 0211 					combo_state = COMBO_MATCH_3; // advance to next state
+00028f e0e3      	LDI  R30,LOW(3)
                  _0x52:
-000291 93e0 026a 	STS  _combo_state,R30
-                 ; 0000 020C 				}
-                 ; 0000 020D 			}
+000290 93e0 026a 	STS  _combo_state,R30
+                 ; 0000 0212 				}
+                 ; 0000 0213 			}
                  _0x4A:
-                 ; 0000 020E 			break;
-000293 c00c      	RJMP _0x3E
-                 ; 0000 020F 
-                 ; 0000 0210 		case COMBO_MATCH_3:
-                 _0x47:
-000294 30e3      	CPI  R30,LOW(0x3)
-000295 e0a0      	LDI  R26,HIGH(0x3)
-000296 07fa      	CPC  R31,R26
-000297 f441      	BRNE _0x4C
-                 ; 0000 0211 			lock();									   // any motion relocks
-000298 9896      	CBI  0x12,6
-000299 e0e1      	LDI  R30,LOW(1)
-00029a 2e5e      	MOV  R5,R30
-                 ; 0000 0212 			eeprom_write_byte(&eeprom_locked, locked); // save locked status
-00029b 940e 02d5 	CALL SUBOPT_0x5
-                 ; 0000 0213 			combo_state = COMBO_MATCH_0;			   // start over
-00029d e0e0      	LDI  R30,LOW(0)
-00029e 93e0 026a 	STS  _combo_state,R30
                  ; 0000 0214 			break;
+000292 c00c      	RJMP _0x3E
                  ; 0000 0215 
-                 ; 0000 0216 		default: // ??? unknown/unexpected state
-                 _0x4C:
-                 ; 0000 0217 			break;
-                 ; 0000 0218 		}
-                 _0x3E:
-                 ; 0000 0219 
-                 ; 0000 021A 		delay_ms(DEBOUNCE_DELAY_MS);
-0002a0 940e 02db 	CALL SUBOPT_0x6
+                 ; 0000 0216 		case COMBO_MATCH_3:
+                 _0x47:
+000293 30e3      	CPI  R30,LOW(0x3)
+000294 e0a0      	LDI  R26,HIGH(0x3)
+000295 07fa      	CPC  R31,R26
+000296 f441      	BRNE _0x4C
+                 ; 0000 0217 			lock();									   // any motion relocks
+000297 9896      	CBI  0x12,6
+000298 e0e1      	LDI  R30,LOW(1)
+000299 2e5e      	MOV  R5,R30
+                 ; 0000 0218 			eeprom_write_byte(&eeprom_locked, locked); // save locked status
+00029a 940e 02e9 	CALL SUBOPT_0x7
+                 ; 0000 0219 			combo_state = COMBO_MATCH_0;			   // start over
+00029c e0e0      	LDI  R30,LOW(0)
+00029d 93e0 026a 	STS  _combo_state,R30
+                 ; 0000 021A 			break;
                  ; 0000 021B 
-                 ; 0000 021C 		motion_direction = 0xFF;
-0002a2 efef      	LDI  R30,LOW(255)
-0002a3 e0f0      	LDI  R31,HIGH(255)
-0002a4 014f      	MOVW R8,R30
-                 ; 0000 021D 		prev_dial.value = dial.value; // Initialize prev_dial with the initial dial position
-0002a5 940e 02bf 	CALL SUBOPT_0x1
-0002a7 93e0 0262 	STS  _prev_dial,R30
-0002a9 93f0 0263 	STS  _prev_dial+1,R31
-                 ; 0000 021E 
-                 ; 0000 021F 		// Disable Timer1 overflow interrupt before entering sleep mode
-                 ; 0000 0220 		// TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
+                 ; 0000 021C 		default: // ??? unknown/unexpected state
+                 _0x4C:
+                 ; 0000 021D 			break;
+                 ; 0000 021E 		}
+                 _0x3E:
+                 ; 0000 021F 
+                 ; 0000 0220 		delay_ms(DEBOUNCE_DELAY_MS);
+00029f 940e 02ef 	CALL SUBOPT_0x8
                  ; 0000 0221 
-                 ; 0000 0222 		// Enter sleep mode
-                 ; 0000 0223 		// sleep_enter();
+                 ; 0000 0222 		motion_direction = 0xFF;
+0002a1 efef      	LDI  R30,LOW(255)
+0002a2 e0f0      	LDI  R31,HIGH(255)
+0002a3 014f      	MOVW R8,R30
+                 ; 0000 0223 		prev_dial.value = dial.value; // Initialize prev_dial with the initial dial position
+0002a4 940e 02d3 	CALL SUBOPT_0x3
+0002a6 93e0 0262 	STS  _prev_dial,R30
+0002a8 93f0 0263 	STS  _prev_dial+1,R31
                  ; 0000 0224 
-                 ; 0000 0225 		// Re-enable Timer1 overflow interrupt after waking up
-                 ; 0000 0226 		// TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
-                 ; 0000 0227 	}
-0002ab cf51      	RJMP _0x24
-                 ; 0000 0228 }
+                 ; 0000 0225 		// Disable Timer1 overflow interrupt before entering sleep mode
+                 ; 0000 0226 		TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
+0002aa b7e9      	IN   R30,0x39
+0002ab 7feb      	ANDI R30,0xFB
+0002ac bfe9      	OUT  0x39,R30
+                 ; 0000 0227 
+                 ; 0000 0228 		// Enter sleep mode
+                 ; 0000 0229 		sleep_enter();
+0002ad 9588      	sleep
+                 ; 0000 022A 
+                 ; 0000 022B 		// Re-enable Timer1 overflow interrupt after waking up
+                 ; 0000 022C 		TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
+0002ae b7e9      	IN   R30,0x39
+0002af 60e4      	ORI  R30,4
+0002b0 bfe9      	OUT  0x39,R30
+                 ; 0000 022D 	}
+0002b1 cf47      	RJMP _0x24
+                 ; 0000 022E }
                  _0x4D:
-0002ac cfff      	RJMP _0x4D
+0002b2 cfff      	RJMP _0x4D
                  ; .FEND
                  
                  	.CSEG
@@ -2406,10 +2414,10 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
                  	.CSEG
                  _sleep_enable:
                  ; .FSTART _sleep_enable
-0002ad b7e5         in   r30,power_ctrl_reg
-0002ae 68e0         sbr  r30,__se_bit
-0002af bfe5         out  power_ctrl_reg,r30
-0002b0 9508      	RET
+0002b3 b7e5         in   r30,power_ctrl_reg
+0002b4 68e0         sbr  r30,__se_bit
+0002b5 bfe5         out  power_ctrl_reg,r30
+0002b6 9508      	RET
                  ; .FEND
                  
                  	.DSEG
@@ -2439,145 +2447,163 @@ D:\Uni\Programming\term_8\embedded_systems\mini_project_rev\Debug\List\mini_proj
 000272           	.BYTE 0x1
                  
                  	.CSEG
-                 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:8 WORDS
+                 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0x0:
-0002b1 920a      	ST   -Y,R0
-0002b2 921a      	ST   -Y,R1
-0002b3 92fa      	ST   -Y,R15
-0002b4 936a      	ST   -Y,R22
-0002b5 937a      	ST   -Y,R23
-0002b6 938a      	ST   -Y,R24
-0002b7 939a      	ST   -Y,R25
-0002b8 93aa      	ST   -Y,R26
-0002b9 93ba      	ST   -Y,R27
-0002ba 93ea      	ST   -Y,R30
-0002bb 93fa      	ST   -Y,R31
-0002bc b7ef      	IN   R30,SREG
-0002bd 93ea      	ST   -Y,R30
-0002be 9508      	RET
+0002b7 91a0 0260 	LDS  R26,_dial
+0002b9 940e 004a 	CALL _LED_segment
+0002bb bbeb      	OUT  0x1B,R30
+0002bc 9ac0      	SBI  0x18,0
+0002bd 9508      	RET
+                 
+                 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+                 SUBOPT_0x1:
+                +
+0002be 91a0 0261+LDS R26 , _dial + ( 1 )
+                 	__GETB2MN _dial,1
+0002c0 940e 004a 	CALL _LED_segment
+0002c2 bbeb      	OUT  0x1B,R30
+0002c3 9ac1      	SBI  0x18,1
+0002c4 9508      	RET
+                 
+                 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:8 WORDS
+                 SUBOPT_0x2:
+0002c5 920a      	ST   -Y,R0
+0002c6 921a      	ST   -Y,R1
+0002c7 92fa      	ST   -Y,R15
+0002c8 936a      	ST   -Y,R22
+0002c9 937a      	ST   -Y,R23
+0002ca 938a      	ST   -Y,R24
+0002cb 939a      	ST   -Y,R25
+0002cc 93aa      	ST   -Y,R26
+0002cd 93ba      	ST   -Y,R27
+0002ce 93ea      	ST   -Y,R30
+0002cf 93fa      	ST   -Y,R31
+0002d0 b7ef      	IN   R30,SREG
+0002d1 93ea      	ST   -Y,R30
+0002d2 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:5 WORDS
-                 SUBOPT_0x1:
-0002bf 91e0 0260 	LDS  R30,_dial
-0002c1 91f0 0261 	LDS  R31,_dial+1
-0002c3 9508      	RET
-                 
-                 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
-                 SUBOPT_0x2:
-0002c4 91e0 026c 	LDS  R30,_candidate_S0000005000
-0002c6 91f0 026d 	LDS  R31,_candidate_S0000005000+1
-0002c8 9508      	RET
-                 
-                 ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:13 WORDS
                  SUBOPT_0x3:
-0002c9 91a0 0260 	LDS  R26,_dial
-0002cb 91b0 0261 	LDS  R27,_dial+1
-0002cd 17ea      	CP   R30,R26
-0002ce 07fb      	CPC  R31,R27
-0002cf 9508      	RET
+0002d3 91e0 0260 	LDS  R30,_dial
+0002d5 91f0 0261 	LDS  R31,_dial+1
+0002d7 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0x4:
+0002d8 91e0 026c 	LDS  R30,_candidate_S0000005000
+0002da 91f0 026d 	LDS  R31,_candidate_S0000005000+1
+0002dc 9508      	RET
+                 
+                 ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:13 WORDS
+                 SUBOPT_0x5:
+0002dd 91a0 0260 	LDS  R26,_dial
+0002df 91b0 0261 	LDS  R27,_dial+1
+0002e1 17ea      	CP   R30,R26
+0002e2 07fb      	CPC  R31,R27
+0002e3 9508      	RET
+                 
+                 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
+                 SUBOPT_0x6:
                 +
-0002d0 91e0 026e+LDS R30 , _candidate_S0000005000 + ( 2 )
-0002d2 91f0 026f+LDS R31 , _candidate_S0000005000 + ( 2 ) + 1
+0002e4 91e0 026e+LDS R30 , _candidate_S0000005000 + ( 2 )
+0002e6 91f0 026f+LDS R31 , _candidate_S0000005000 + ( 2 ) + 1
                  	__GETW1MN _candidate_S0000005000,2
-0002d4 9508      	RET
+0002e8 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
-                 SUBOPT_0x5:
-0002d5 2de5      	MOV  R30,R5
-0002d6 e0a0      	LDI  R26,LOW(_eeprom_locked)
-0002d7 e0b0      	LDI  R27,HIGH(_eeprom_locked)
-0002d8 940e 0301 	CALL __EEPROMWRB
-0002da 9508      	RET
+                 SUBOPT_0x7:
+0002e9 2de5      	MOV  R30,R5
+0002ea e0a0      	LDI  R26,LOW(_eeprom_locked)
+0002eb e0b0      	LDI  R27,HIGH(_eeprom_locked)
+0002ec 940e 0315 	CALL __EEPROMWRB
+0002ee 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:3 WORDS
-                 SUBOPT_0x6:
-0002db e1a4      	LDI  R26,LOW(20)
-0002dc e0b0      	LDI  R27,0
-0002dd 940c 02df 	JMP  _delay_ms
+                 SUBOPT_0x8:
+0002ef e0aa      	LDI  R26,LOW(10)
+0002f0 e0b0      	LDI  R27,0
+0002f1 940c 02f3 	JMP  _delay_ms
                  
                  
                  	.CSEG
                  _delay_ms:
-0002df 9610      	adiw r26,0
-0002e0 f039      	breq __delay_ms1
+0002f3 9610      	adiw r26,0
+0002f4 f039      	breq __delay_ms1
                  __delay_ms0:
-0002e1 95a8      	wdr
+0002f5 95a8      	wdr
                 +
-0002e2 ec8d     +LDI R24 , LOW ( 0xACD )
-0002e3 e09a     +LDI R25 , HIGH ( 0xACD )
+0002f6 ec8d     +LDI R24 , LOW ( 0xACD )
+0002f7 e09a     +LDI R25 , HIGH ( 0xACD )
                 +__DELAY_USW_LOOP :
-0002e4 9701     +SBIW R24 , 1
-0002e5 f7f1     +BRNE __DELAY_USW_LOOP
+0002f8 9701     +SBIW R24 , 1
+0002f9 f7f1     +BRNE __DELAY_USW_LOOP
                  	__DELAY_USW 0xACD
-0002e6 9711      	sbiw r26,1
-0002e7 f7c9      	brne __delay_ms0
+0002fa 9711      	sbiw r26,1
+0002fb f7c9      	brne __delay_ms0
                  __delay_ms1:
-0002e8 9508      	ret
+0002fc 9508      	ret
                  
                  __EEPROMRDW:
-0002e9 9611      	ADIW R26,1
-0002ea d002      	RCALL __EEPROMRDB
-0002eb 2ffe      	MOV  R31,R30
-0002ec 9711      	SBIW R26,1
+0002fd 9611      	ADIW R26,1
+0002fe d002      	RCALL __EEPROMRDB
+0002ff 2ffe      	MOV  R31,R30
+000300 9711      	SBIW R26,1
                  
                  __EEPROMRDB:
-0002ed 99e1      	SBIC EECR,EEWE
-0002ee cffe      	RJMP __EEPROMRDB
-0002ef 93ff      	PUSH R31
-0002f0 b7ff      	IN   R31,SREG
-0002f1 94f8      	CLI
-0002f2 bbae      	OUT  EEARL,R26
-0002f3 bbbf      	OUT  EEARH,R27
-0002f4 9ae0      	SBI  EECR,EERE
-0002f5 b3ed      	IN   R30,EEDR
-0002f6 bfff      	OUT  SREG,R31
-0002f7 91ff      	POP  R31
-0002f8 9508      	RET
+000301 99e1      	SBIC EECR,EEWE
+000302 cffe      	RJMP __EEPROMRDB
+000303 93ff      	PUSH R31
+000304 b7ff      	IN   R31,SREG
+000305 94f8      	CLI
+000306 bbae      	OUT  EEARL,R26
+000307 bbbf      	OUT  EEARH,R27
+000308 9ae0      	SBI  EECR,EERE
+000309 b3ed      	IN   R30,EEDR
+00030a bfff      	OUT  SREG,R31
+00030b 91ff      	POP  R31
+00030c 9508      	RET
                  
                  __EEPROMWRW:
-0002f9 d007      	RCALL __EEPROMWRB
-0002fa 9611      	ADIW R26,1
-0002fb 93ef      	PUSH R30
-0002fc 2fef      	MOV  R30,R31
-0002fd d003      	RCALL __EEPROMWRB
-0002fe 91ef      	POP  R30
-0002ff 9711      	SBIW R26,1
-000300 9508      	RET
+00030d d007      	RCALL __EEPROMWRB
+00030e 9611      	ADIW R26,1
+00030f 93ef      	PUSH R30
+000310 2fef      	MOV  R30,R31
+000311 d003      	RCALL __EEPROMWRB
+000312 91ef      	POP  R30
+000313 9711      	SBIW R26,1
+000314 9508      	RET
                  
                  __EEPROMWRB:
-000301 9be1      	SBIS EECR,EEWE
-000302 c002      	RJMP __EEPROMWRB1
-000303 95a8      	WDR
-000304 cffc      	RJMP __EEPROMWRB
+000315 9be1      	SBIS EECR,EEWE
+000316 c002      	RJMP __EEPROMWRB1
+000317 95a8      	WDR
+000318 cffc      	RJMP __EEPROMWRB
                  __EEPROMWRB1:
-000305 b79f      	IN   R25,SREG
-000306 94f8      	CLI
-000307 bbae      	OUT  EEARL,R26
-000308 bbbf      	OUT  EEARH,R27
-000309 9ae0      	SBI  EECR,EERE
-00030a b38d      	IN   R24,EEDR
-00030b 17e8      	CP   R30,R24
-00030c f019      	BREQ __EEPROMWRB0
-00030d bbed      	OUT  EEDR,R30
-00030e 9ae2      	SBI  EECR,EEMWE
-00030f 9ae1      	SBI  EECR,EEWE
+000319 b79f      	IN   R25,SREG
+00031a 94f8      	CLI
+00031b bbae      	OUT  EEARL,R26
+00031c bbbf      	OUT  EEARH,R27
+00031d 9ae0      	SBI  EECR,EERE
+00031e b38d      	IN   R24,EEDR
+00031f 17e8      	CP   R30,R24
+000320 f019      	BREQ __EEPROMWRB0
+000321 bbed      	OUT  EEDR,R30
+000322 9ae2      	SBI  EECR,EEMWE
+000323 9ae1      	SBI  EECR,EEWE
                  __EEPROMWRB0:
-000310 bf9f      	OUT  SREG,R25
-000311 9508      	RET
+000324 bf9f      	OUT  SREG,R25
+000325 9508      	RET
                  
                  __INITLOCB:
                  __INITLOCW:
-000312 0fac      	ADD  R26,R28
-000313 1fbd      	ADC  R27,R29
+000326 0fac      	ADD  R26,R28
+000327 1fbd      	ADC  R27,R29
                  __INITLOC0:
-000314 9005      	LPM  R0,Z+
-000315 920d      	ST   X+,R0
-000316 958a      	DEC  R24
-000317 f7e1      	BRNE __INITLOC0
-000318 9508      	RET
+000328 9005      	LPM  R0,Z+
+000329 920d      	ST   X+,R0
+00032a 958a      	DEC  R24
+00032b f7e1      	BRNE __INITLOC0
+00032c 9508      	RET
                  
                  ;END OF CODE MARKER
                  __END_OF_CODE:
@@ -2598,40 +2624,40 @@ counted separately from r26..r31 here.
 .dseg memory usage only counts static data declared with .byte
 
 ATmega32A register use summary:
-r0 :   8 r1 :   2 r2 :   0 r3 :   0 r4 :   0 r5 :   8 r6 :   6 r7 :   3 
+r0 :   8 r1 :   2 r2 :   0 r3 :   0 r4 :   0 r5 :   8 r6 :   7 r7 :   3 
 r8 :   6 r9 :   2 r10:   0 r11:   0 r12:   0 r13:   0 r14:   0 r15:   2 
 r16:   0 r17:   6 r18:   0 r19:   0 r20:   0 r21:   0 r22:   2 r23:   2 
-r24:  12 r25:   6 r26:  99 r27:  23 r28:   6 r29:   2 r30: 225 r31:  55 
+r24:  12 r25:   6 r26:  99 r27:  23 r28:   6 r29:   2 r30: 229 r31:  56 
 x  :   4 y  :  38 z  :   1 
 Registers used: 22 out of 35 (62.9%)
 
 ATmega32A instruction use summary:
 .lds  :   0 .lds.l:   0 .sts  :   0 .sts.l:   0 adc   :   2 add   :   2 
-adiw  :   5 and   :   0 andi  :   0 asr   :   0 bclr  :   0 bld   :   0 
+adiw  :   5 and   :   0 andi  :   1 asr   :   0 bclr  :   0 bld   :   0 
 brbc  :   0 brbs  :   0 brcc  :   0 brcs  :   0 break :   0 breq  :   8 
 brge  :   8 brhc  :   0 brhs  :   0 brid  :   0 brie  :   0 brlo  :   0 
 brlt  :  12 brmi  :   0 brne  :  27 brpl  :   0 brsh  :   0 brtc  :   0 
-brts  :   0 brvc  :   0 brvs  :   0 bset  :   0 bst   :   0 call  :  38 
-cbi   :   4 cbr   :   0 clc   :   0 clh   :   0 cli   :   4 cln   :   0 
+brts  :   0 brvc  :   0 brvs  :   0 bset  :   0 bst   :   0 call  :  44 
+cbi   :   6 cbr   :   0 clc   :   0 clh   :   0 cli   :   4 cln   :   0 
 clr   :   6 cls   :   0 clt   :   0 clv   :   0 clz   :   0 com   :   1 
 cp    :   5 cpc   :  11 cpi   :  33 cpse  :   0 dec   :   2 des   :   0 
 eor   :   1 fmul  :   0 fmuls :   0 fmulsu:   0 icall :   0 ijmp  :   0 
-in    :  13 inc   :   0 jmp   :  23 ld    :  17 ldd   :   1 ldi   : 119 
-lds   :  49 lpm   :   1 lsl   :   0 lsr   :   0 mov   :   9 movw  :   8 
+in    :  14 inc   :   0 jmp   :  23 ld    :  17 ldd   :   1 ldi   : 121 
+lds   :  49 lpm   :   1 lsl   :   0 lsr   :   0 mov   :   9 movw  :   9 
 mul   :   0 muls  :   0 mulsu :   0 neg   :   0 nop   :   0 or    :   2 
-ori   :   5 out   :  46 pop   :   2 push  :   2 rcall :  10 ret   :  14 
+ori   :   5 out   :  46 pop   :   2 push  :   2 rcall :   8 ret   :  16 
 reti  :   2 rjmp  :  28 rol   :   0 ror   :   0 sbc   :   0 sbci  :   0 
 sbi   :   8 sbic  :   1 sbis  :   1 sbiw  :  10 sbr   :   1 sbrc  :   0 
 sbrs  :   0 sec   :   0 seh   :   0 sei   :   3 sen   :   0 ser   :   0 
-ses   :   0 set   :   0 sev   :   0 sez   :   0 sleep :   0 spm   :   0 
+ses   :   0 set   :   0 sev   :   0 sez   :   0 sleep :   1 spm   :   0 
 st    :  24 std   :   0 sts   :  49 sub   :   0 subi  :   8 swap  :   0 
 tst   :   1 wdr   :   2 
-Instructions used: 46 out of 116 (39.7%)
+Instructions used: 48 out of 116 (41.4%)
 
 ATmega32A memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x000632   1574     12   1586   32768   4.8%
+[.cseg] 0x000000 0x00065a   1614     12   1626   32768   5.0%
 [.dseg] 0x000060 0x000273      0     19     19    2048   0.9%
 [.eseg] 0x000000 0x000009      0      9      9    1024   0.9%
 

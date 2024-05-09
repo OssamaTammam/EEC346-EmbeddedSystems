@@ -8,7 +8,7 @@ http://www.hpinfotech.com
 Project : mini_project
 Version :
 Date    : 24-Apr-2024
-Author  :
+Author  : Ossama
 Company :
 Comments:
 
@@ -34,7 +34,7 @@ Data Stack size         : 512
 
 #define bit_is_clear(sfr, bit) (!(sfr & (1 << bit)))
 
-#define DEBOUNCE_DELAY_MS 20
+#define DEBOUNCE_DELAY_MS 10
 #define BLINKING_DELAY_MS 100
 
 typedef union
@@ -78,7 +78,7 @@ typedef enum
 
 volatile PROG_STATE prog_state = PROG_0; // combination programming state machine variable
 
-#define SCREENSAVER_TIMEOUT_VALUE 2000 // display blank timeout value in 1/250 second increments (2,000 ~= 8 seconds)
+#define SCREENSAVER_TIMEOUT_VALUE 500 // display blank timeout value in 1/250 second increments (2,000 ~= 8 seconds)
 unsigned int screensaver_timeout;
 
 // EEPROM memory map
@@ -141,17 +141,20 @@ SEGMENT LED_segment(unsigned char value)
 
 void LED_blink(unsigned char n)
 {
-
+	cli(); // Disable interrupts
 	while (n--)
 	{
+		PORTA = LED_segment(dial.tens); // Display tens digit
+		sbi(PORTB, PORTB0);				// Turn on left digit (tens)
+		delay_ms(BLINKING_DELAY_MS);
+		cbi(PORTB, PORTB0); // Turn off left digit (tens)
 
-		cli();						 // disable interrupts (prevents display multiplexing)
-		PORTA = 0b11111111;			 // all segments off
-		delay_ms(BLINKING_DELAY_MS); // ~1 second delay, with display off
-		GIFR |= (1 << INTF2);		 // Clear INT2 flag
-		sei();						 // re-enable interrupts
-		delay_ms(BLINKING_DELAY_MS); // ~1 second delay, with display on
+		PORTA = LED_segment(dial.units); // Display units digit
+		sbi(PORTB, PORTB1);				 // Turn on right digit (units)
+		delay_ms(BLINKING_DELAY_MS);
+		cbi(PORTB, PORTB1); // Turn off right digit (units)
 	}
+	sei(); // Enable interrupts
 }
 
 typedef enum
@@ -237,8 +240,9 @@ typedef enum
 interrupt[TIM1_OVF] void timer1_ovf_isr(void)
 {
 	// Reinitialize Timer1 value
-	TCNT1H = 0xCA00 >> 8;
-	TCNT1L = 0xCA00 & 0xff;
+	TCNT1H = 0xD4CD >> 8;
+	TCNT1L = 0xD4CD & 0xff;
+
 	// Place your code here
 	static unsigned char digit = DIGIT_LEFT; // alternate between left & right digits
 
@@ -313,21 +317,21 @@ void main(void)
 
 	// Timer/Counter 1 initialization
 	// Clock source: System Clock
-	// Clock value: 1382.400 kHz
+	// Clock value: 11059.200 kHz
 	// Mode: Normal top=0xFFFF
 	// OC1A output: Disconnected
 	// OC1B output: Disconnected
 	// Noise Canceler: Off
 	// Input Capture on Falling Edge
-	// Timer Period: 10 ms
+	// Timer Period: 0.99998 ms
 	// Timer1 Overflow Interrupt: On
 	// Input Capture Interrupt: Off
 	// Compare A Match Interrupt: Off
 	// Compare B Match Interrupt: Off
 	TCCR1A = (0 << COM1A1) | (0 << COM1A0) | (0 << COM1B1) | (0 << COM1B0) | (0 << WGM11) | (0 << WGM10);
-	TCCR1B = (0 << ICNC1) | (0 << ICES1) | (0 << WGM13) | (0 << WGM12) | (0 << CS12) | (1 << CS11) | (0 << CS10);
-	TCNT1H = 0xCA;
-	TCNT1L = 0x00;
+	TCCR1B = (0 << ICNC1) | (0 << ICES1) | (0 << WGM13) | (0 << WGM12) | (0 << CS12) | (0 << CS11) | (1 << CS10);
+	TCNT1H = 0xD4;
+	TCNT1L = 0xCD;
 	ICR1H = 0x00;
 	ICR1L = 0x00;
 	OCR1AH = 0x00;
@@ -414,10 +418,12 @@ void main(void)
 
 	while (1)
 	{
+
+		screensaver_timeout = SCREENSAVER_TIMEOUT_VALUE; // reset screensaver timeout value - turns display on
+
 		// Wait for motion
 		while (motion_direction != 0xAA && motion_direction != 0x55)
 			;
-
 		// Determine motion direction
 		switch (motion_direction)
 		{
@@ -541,12 +547,12 @@ void main(void)
 		prev_dial.value = dial.value; // Initialize prev_dial with the initial dial position
 
 		// Disable Timer1 overflow interrupt before entering sleep mode
-		// TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
+		TIMSK &= ~(1 << TOIE1); // Disable Timer1 overflow interrupt
 
 		// Enter sleep mode
-		// sleep_enter();
+		sleep_enter();
 
 		// Re-enable Timer1 overflow interrupt after waking up
-		// TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
+		TIMSK |= (1 << TOIE1); // Enable Timer1 overflow interrupt
 	}
 }

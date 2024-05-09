@@ -8,7 +8,7 @@ C=
 D=24-Apr-2024
 Files=1
 F1=mini_project.c
-OpenedFiles=2
+OpenedFiles=1
 OF1=mini_project.c
 Active1=1
 DebugOutputListFilesDirectory=Debug\List
@@ -27,7 +27,7 @@ Active0=0
 EditorPanel0=0
 PageIndex0=0
 EditorPanel1=0
-TimeStamp1=1487503714
+TimeStamp1=1487508306
 PageIndex1=1
 OF2=..\..\..\..\Programs\cvavr\inc\sleep.h
 Active2=0
@@ -132,8 +132,8 @@ WatchAVR8LAutoVariables=0
 UseEEPROMLocation0=1
 RebuildAll=0
 LinkageInformationPresent=1
-COFFileTimeStamp=1487507171
-Build=26
+COFFileTimeStamp=1487509074
+Build=56
 [DefinedSymbolsDebug]
 Count=0
 [Compiler]
@@ -235,7 +235,7 @@ UseEEPROMLocation0=1
 RebuildAll=1
 LinkageInformationPresent=0
 COFFileTimeStamp=-1
-Build=26
+Build=56
 [DefinedSymbols]
 Count=0
 [CompilerAdvanced]
@@ -324,7 +324,7 @@ F1=mini_project.c
 F2=..\..\..\..\Programs\cvavr\inc\interrupt.h
 F3=..\..\..\..\Programs\cvavr\inc\sleep.h
 [Bookmarks1]
-TimeStamp=1487507124
+TimeStamp=1487508306
 Row=0
 Column=0
 ScrollPosX=0
@@ -344,7 +344,7 @@ Row=0
 Column=0
 ScrollPosX=0
 ScrollPosY=0
-TimeStamp=1487507126
+TimeStamp=1487508307
 [BuildInfoCompiler]
 L1=Build configuration: Debug
 L2=Chip: ATmega32A
@@ -362,8 +362,8 @@ L13=Enhanced function parameters passing: Yes
 L14=Automatic register allocation: Yes
 L15=Smart register allocation: Yes
 L16=
-L17=Build: 26
-L18=4325 line(s) compiled
+L17=Build: 56
+L18=4331 line(s) compiled
 L19=No errors
 L20=4 warning(s)
 L21=
@@ -371,7 +371,7 @@ L22=Bit variables size: 0 byte(s)
 L23=
 L24=Data Stack area: 0x60 to 0x25F
 L25=Data Stack size: 512 byte(s)
-L26=Estimated Data Stack usage: 26 byte(s)
+L26=Estimated Data Stack usage: 40 byte(s)
 L27=
 L28=RAM Global variables area: 0x260 to 0x272
 L29=RAM Global variables size: 19 byte(s)
@@ -383,8 +383,8 @@ L34=Heap size: 0 byte(s)
 L35=
 Lines=38
 L36=EEPROM usage: 9 byte(s), 0.9% of EEPROM
-L37=Program size: 793 words (1586 bytes), 4.8% of FLASH
-L38=34 words (68 bytes), 4.1% reduced by Code Compression
+L37=Program size: 813 words (1626 bytes), 5.0% of FLASH
+L38=36 words (72 bytes), 4.2% reduced by Code Compression
 [BuildInfoAssembler]
 Lines=10
 L1=AVRASM: AVR macro assembler 2.1.30 (build 592 Nov  7 2008 12:38:17)
@@ -393,7 +393,7 @@ L3=
 L4=ATmega32A memory use summary [bytes]:
 L5=Segment   Begin    End      Code   Data   Used    Size   Use%
 L6=---------------------------------------------------------------
-L7=[.cseg] 0x000000 0x000632   1574     12   1586   32768   4.8%
+L7=[.cseg] 0x000000 0x00065a   1614     12   1626   32768   5.0%
 L8=[.dseg] 0x000060 0x000273      0     19     19    2048   0.9%
 L9=[.eseg] 0x000000 0x000009      0      9      9    1024   0.9%
 L10=
@@ -431,9 +431,9 @@ BK6=-1
 BK7=-1
 BK8=-1
 BK9=-1
-[FoldedCode1]
-Blocks=0
 [FoldedCode3]
+Blocks=0
+[FoldedCode1]
 Blocks=0
 [HeadersList]
 Files=1

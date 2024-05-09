@@ -27,10 +27,10 @@ FLASH Allocation [words]
 Function                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
 LED_segment                                                                       0x0004A     18
-LED_blink                                                                         0x0005C     24
-ext_int0_isr                                                                      0x00074     10
-ext_int1_isr                                                                      0x0007E     15
-ext_int2_isr                                                                      0x0008D    101
-timer1_ovf_isr                                                                    0x000F2     76
-main                                                                              0x0013E    367
-sleep_enable                                                                      0x002AD      4
+LED_blink                                                                         0x0005C     25
+ext_int0_isr                                                                      0x00075     10
+ext_int1_isr                                                                      0x0007F     15
+ext_int2_isr                                                                      0x0008E    101
+timer1_ovf_isr                                                                    0x000F3     70
+main                                                                              0x00139    378
+sleep_enable                                                                      0x002B3      4
